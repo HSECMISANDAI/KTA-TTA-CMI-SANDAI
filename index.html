@@ -1610,7 +1610,7 @@ $('exportBtn').addEventListener('click', async ()=>{
   const THICK = { style: 'thick' };
   const thickBorder = { top: THICK, left: THICK, right: THICK, bottom: THICK };
 
-  wsPica.mergeCells('B1:L2');
+  wsPica.mergeCells('B1:M2');
   const titleCell = wsPica.getCell('B1');
   titleCell.value = 'PROBLEM IDENTIFICATION & CORRECTIVE ACTION\nPT. CITA MINERAL INVESTINDO Tbk - SITE SANDAI\nINSPEKSI';
   titleCell.font = { name: 'Times New Roman', size: 18, bold: true };
@@ -1625,7 +1625,7 @@ $('exportBtn').addEventListener('click', async ()=>{
   subCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
   wsPica.getRow(3).height = 20.25;
 
-  const picaHeaders = ['No','Lokasi','Foto Before','Keterangan','Potensi resiko','Tindakan Perbaikan','PIC','Due Date','Foto After','Status','Catatan'];
+  const picaHeaders = ['No','Tanggal Pelaksanaan','Lokasi','Foto Before','Keterangan','Potensi resiko','Tindakan Perbaikan','PIC','Due Date','Foto After','Status','Catatan'];
   const headerRow = wsPica.getRow(4);
   picaHeaders.forEach((h, idx)=>{
     const cell = headerRow.getCell(idx+2); // start at column B
@@ -1640,21 +1640,21 @@ $('exportBtn').addEventListener('click', async ()=>{
     const e = sorted[i];
     const r = 5 + i;
     const rowVals = [
-      i+1, e.lokasi, '', e.temuan, e.potensiRisiko,
+      i+1, e.tanggalPelaksanaan, e.lokasi, '', e.temuan, e.potensiRisiko,
       e.tindakan, picText(e.pic), e.dueDate ? new Date(e.dueDate) : '', '', e.status ? e.status.toUpperCase() : '', ''
     ];
     rowVals.forEach((val, idx)=>{
-      const col = idx + 2; // B..L
+      const col = idx + 2; // B..M
       const cell = wsPica.getCell(r, col);
       cell.value = val;
       cell.font = { name: 'Times New Roman', size: 12 };
       cell.border = thickBorder;
-      const wrapCols = [3,5,6,7]; // Lokasi, Keterangan, Potensi resiko, Tindakan Perbaikan
+      const wrapCols = [4,6,7,8]; // Lokasi, Keterangan, Potensi resiko, Tindakan Perbaikan
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: wrapCols.includes(col) };
-      if(col === 9 && val instanceof Date){ cell.numFmt = 'd-mmm-yy'; } // Due Date
+      if(col === 10 && val instanceof Date){ cell.numFmt = 'd-mmm-yy'; } // Due Date
     });
     // Status color: Open = merah, Close = hijau
-    const statusCell = wsPica.getCell(r, 11);
+    const statusCell = wsPica.getCell(r, 12);
     if(e.status === 'Open'){
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
     } else if(e.status === 'Close'){
@@ -1672,12 +1672,12 @@ $('exportBtn').addEventListener('click', async ()=>{
         const base64Data = e.foto.split(',')[1];
         const imgId = wb.addImage({ base64: base64Data, extension: 'jpeg' });
         wsPica.addImage(imgId, {
-          tl: { col: 3.05, row: (r - 1) + 0.05 },
+          tl: { col: 4.05, row: (r - 1) + 0.05 },
           ext: { width: imgW, height: imgH }
         });
       }catch(err){
         console.warn('Gagal embed foto ke Excel untuk baris', r, err);
-        wsPica.getCell(r, 4).value = 'Foto gagal dimuat';
+        wsPica.getCell(r, 5).value = 'Foto gagal dimuat';
       }
     }
   }
@@ -1686,8 +1686,8 @@ $('exportBtn').addEventListener('click', async ()=>{
   const sigStartRow = 5 + sorted.length + 2; // 2 baris jarak setelah tabel
   const sigCols = [
     { col: 3, label: 'Dibuat oleh', name: '', title: '(Safety Patrol)' },
-    { col: 6, label: 'Diperiksa oleh', name: 'Agus Novianto', title: 'Supervisor Safety & Assessment' },
-    { col: 9, label: 'Disetujui oleh', name: 'Rizki Kurniawan', title: 'Superintendent Safety' }
+    { col: 7, label: 'Diperiksa oleh', name: 'Agus Novianto', title: 'Supervisor Safety & Assessment' },
+    { col: 11, label: 'Disetujui oleh', name: 'Rizki Kurniawan', title: 'Superintendent Safety' }
   ];
   sigCols.forEach(sc=>{
     // Label "Dibuat oleh / Diperiksa oleh / Disetujui oleh"
@@ -1721,17 +1721,18 @@ $('exportBtn').addEventListener('click', async ()=>{
     wsPica.getRow(rr).height = isSignArea ? 22 : 18;
   }
 
-  wsPica.getColumn(2).width = 5.4;
-  wsPica.getColumn(3).width = 13.6;
-  wsPica.getColumn(4).width = 34.4;
-  wsPica.getColumn(5).width = 24.9;
-  wsPica.getColumn(6).width = 27.3;
-  wsPica.getColumn(7).width = 29.9;
-  wsPica.getColumn(8).width = 13.1;
-  wsPica.getColumn(9).width = 15.9;
-  wsPica.getColumn(10).width = 31.4;
-  wsPica.getColumn(11).width = 14.1;
-  wsPica.getColumn(12).width = 20.4;
+  wsPica.getColumn(2).width = 5.4;   // No
+  wsPica.getColumn(3).width = 14;    // Tanggal Pelaksanaan
+  wsPica.getColumn(4).width = 13.6;  // Lokasi
+  wsPica.getColumn(5).width = 34.4;  // Foto Before
+  wsPica.getColumn(6).width = 24.9;  // Keterangan
+  wsPica.getColumn(7).width = 27.3;  // Potensi resiko
+  wsPica.getColumn(8).width = 29.9;  // Tindakan Perbaikan
+  wsPica.getColumn(9).width = 13.1;  // PIC
+  wsPica.getColumn(10).width = 15.9; // Due Date
+  wsPica.getColumn(11).width = 31.4; // Foto After
+  wsPica.getColumn(12).width = 14.1; // Status
+  wsPica.getColumn(13).width = 20.4; // Catatan
 
   try{
     const buffer = await wb.xlsx.writeBuffer();
