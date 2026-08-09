@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#0B1E33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KTA-TTA SITE SANDAI">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>KTA-TTA SITE SANDAI</title>
+
+<!-- Firebase (compat SDK, no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --steel:#0B1E33;
+    --steel-2:#15304D;
+    --paper:#F5F6F8;
+    --paper-2:#EAEDF1;
+    --ink:#1E2530;
+    --ink-soft:#68707C;
+    --hazard:#EA6A24;
+    --hazard-ink:#FFFFFF;
+    --extreme:#C0272B;
+    --high:#EA6A24;
+    --mod:#C58A05;
+    --low:#178A4C;
+    --line:#E2E5EA;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(15,23,42,0.05), 0 4px 10px rgba(15,23,42,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
+  }
+  .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;}
+
+  header{
+    background:linear-gradient(135deg, var(--steel), var(--steel-2));
+    color:var(--paper);
+    padding:18px 20px 16px;
+    position:sticky;top:0;z-index:20;
+    border-bottom:3px solid var(--hazard);
+    box-shadow:0 4px 16px rgba(11,30,51,0.18);
+  }
+  .brand-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .brand{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:16px;
+    letter-spacing:0.01em;
+    line-height:1.2;
+  }
+  #brandSubtitle{display:block;font-size:11px;font-weight:500;letter-spacing:0.02em;color:#A9C3DB;margin-top:2px;}
+  .counter{
+    background:var(--hazard);
+    color:var(--hazard-ink);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:999px;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .counter b{display:block;font-size:16px;line-height:1;}
+  .conn-status{
+    font-size:10px;letter-spacing:0.02em;text-transform:uppercase;
+    padding:4px 18px 0;color:#B9BEC2;text-align:center;
+  }
+  .conn-status.ok{color:#8FCB9B;}
+  .conn-status.offline{color:#F0C572;}
+  .conn-status.err{color:#E39A9A;}
+
+  .tabs{
+    display:flex;background:var(--paper-2);margin:14px 16px 0;padding:4px;
+    border-radius:999px;gap:2px;
+  }
+  .tab{
+    flex:1;text-align:center;padding:10px 6px;
+    font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;
+    letter-spacing:0.02em;
+    color:var(--ink-soft);cursor:pointer;border-radius:999px;
+    user-select:none;transition:background .15s,color .15s;
+  }
+  .tab.active{color:#fff;background:var(--hazard);box-shadow:0 2px 6px rgba(234,106,36,0.35);}
+
+  main{padding:18px 16px 90px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .section-label{
+    font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;
+    letter-spacing:0.03em;text-transform:uppercase;color:var(--ink-soft);
+    margin:22px 0 8px;
+  }
+  .section-label:first-child{margin-top:0;}
+  .tear{
+    border:none;border-top:1px solid var(--line);margin:22px 0 0;
+  }
+  label{
+    display:block;font-family:'Manrope',sans-serif;font-weight:500;font-size:11.5px;
+    letter-spacing:0.02em;text-transform:uppercase;color:var(--ink-soft);
+    margin-bottom:5px;margin-top:14px;
+  }
+  input[type=text],input[type=date],select,textarea{
+    width:100%;
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:11px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--hazard);border-color:var(--hazard);}
+  textarea{resize:vertical;min-height:64px;line-height:1.4;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .doc-input{font-family:'JetBrains Mono',monospace;font-size:14px;}
+
+  input[type=file]{
+    width:100%;background:#fff;border:1.5px dashed var(--line);border-radius:10px;
+    padding:14px 10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink-soft);
+  }
+  .photo-preview-wrap{margin-top:10px;position:relative;display:inline-block;}
+  .photo-preview-wrap img{
+    max-width:100%;max-height:220px;border-radius:10px;border:1.5px solid var(--line);display:block;
+  }
+  .photo-preview-wrap button{
+    margin-top:6px;background:#fff;border:1.5px solid var(--extreme);color:var(--extreme);
+    border-radius:10px;padding:6px 12px;font-family:'Manrope',sans-serif;font-weight:600;
+    font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;
+  }
+  .ticket-photo{
+    margin-top:8px;width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:1px solid var(--line);
+  }
+
+  .risk-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+  .risk-btn{
+    border:2px solid var(--line);background:#fff;border-radius:10px;
+    padding:10px 4px;text-align:center;cursor:pointer;
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:17px;
+    color:var(--ink-soft);
+  }
+  .risk-btn small{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+  .risk-btn[data-r="AA"].on{background:var(--extreme);color:#fff;border-color:var(--extreme);}
+  .risk-btn[data-r="A"].on{background:var(--high);color:#fff;border-color:var(--high);}
+  .risk-btn[data-r="B"].on{background:var(--mod);color:#2B2200;border-color:var(--mod);}
+  .risk-btn[data-r="C"].on{background:var(--low);color:#fff;border-color:var(--low);}
+
+  .pic-chip-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .pic-chip{
+    border:1.5px solid var(--line);background:#fff;border-radius:999px;
+    padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;user-select:none;font-family:'Manrope',sans-serif;
+    display:flex;align-items:center;gap:6px;
+  }
+  .pic-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex-shrink:0;}
+  .pic-chip.on{background:var(--steel);color:#fff;border-color:var(--steel);}
+  .pic-chip.on .dot{background:var(--hazard);}
+
+  .stamp-wrap{display:flex;justify-content:center;margin:16px 0 4px;min-height:56px;align-items:center;}
+  .stamp{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 22px;border-radius:999px;
+    font-family:'Manrope',sans-serif;font-weight:700;
+  }
+  .stamp .lvl{font-size:20px;line-height:1;}
+  .stamp .txt{font-size:11px;letter-spacing:0.03em;text-transform:uppercase;font-weight:600;opacity:0.85;}
+  .stamp.aa{background:#FBE4E4;color:var(--extreme);}
+  .stamp.a{background:#FDE7DA;color:var(--high);}
+  .stamp.b{background:#FBEFD4;color:var(--mod);}
+  .stamp.c{background:#DDF0E3;color:var(--low);}
+  .stamp-empty{color:var(--ink-soft);font-size:12px;font-family:'Inter',sans-serif;text-align:center;}
+
+  .submit-btn{
+    width:100%;background:var(--hazard);color:var(--hazard-ink);
+    border:none;border-radius:12px;padding:16px;margin-top:24px;
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:15px;
+    letter-spacing:0.01em;cursor:pointer;box-shadow:0 6px 16px rgba(234,106,36,0.3);
+    transition:transform .1s;
+  }
+  .submit-btn:active{transform:translateY(1px);}
+  .submit-btn:disabled{opacity:0.5;}
+  .hint{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.4;}
+  .cancel-edit{
+    width:100%;background:transparent;border:1.5px solid var(--line);color:var(--ink-soft);
+    border-radius:10px;padding:10px;margin-top:8px;font-family:'Manrope',sans-serif;
+    font-weight:600;font-size:12.5px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;
+  }
+
+  .riwayat-toolbar{display:flex;gap:8px;margin-bottom:14px;}
+  .export-btn{
+    flex:1;background:var(--steel);color:#fff;border:none;border-radius:12px;
+    padding:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;
+    letter-spacing:0.01em;cursor:pointer;box-shadow:0 4px 12px rgba(11,30,51,0.2);
+  }
+  .export-btn.secondary{background:#fff;color:var(--extreme);border:1.5px solid var(--extreme);box-shadow:none;}
+  .ticket{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:12px 12px 10px;margin-bottom:10px;position:relative;
+    border-left:6px solid var(--line);
+  }
+  .ticket[data-r="AA"]{border-left-color:var(--extreme);}
+  .ticket[data-r="A"]{border-left-color:var(--high);}
+  .ticket[data-r="B"]{border-left-color:var(--mod);}
+  .ticket[data-r="C"]{border-left-color:var(--low);}
+  .ticket-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .ticket-no{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .ticket-status{
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:10px;letter-spacing:0.03em;
+    text-transform:uppercase;padding:3px 10px;border-radius:999px;
+  }
+  .ticket-status.open{background:#FCE8DD;color:#B04A0F;}
+  .ticket-status.close{background:#DFF3E7;color:#0F6B37;}
+  .ticket-loc{font-family:'Manrope',sans-serif;font-weight:600;font-size:14px;margin-top:4px;}
+  .ticket-txt{font-size:13px;color:var(--ink);margin-top:4px;line-height:1.4;}
+  .ticket-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--ink-soft);flex-wrap:wrap;gap:4px;}
+  .ticket-actions{display:flex;gap:14px;margin-top:8px;}
+  .ticket-actions button{
+    background:none;border:none;padding:0;font-family:'Manrope',sans-serif;font-weight:600;
+    font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;color:var(--ink-soft);
+  }
+  .ticket-actions button.del{color:var(--extreme);}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+  .empty-state .big{font-size:40px;margin-bottom:8px;}
+
+  /* DASHBOARD */
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+  .stat-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:14px 12px;text-align:center;
+  }
+  .stat-card .num{
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:28px;line-height:1;color:var(--ink);
+  }
+  .stat-card .lbl{
+    font-family:'Manrope',sans-serif;font-weight:500;font-size:10.5px;letter-spacing:0.02em;
+    text-transform:uppercase;color:var(--ink-soft);margin-top:6px;
+  }
+  .stat-card.open .num{color:var(--high);}
+  .stat-card.close .num{color:var(--low);}
+  .stat-card.overdue .num{color:var(--extreme);}
+  .stat-card.wide{grid-column:1 / -1;}
+  .progress-bar{
+    width:100%;height:10px;background:var(--paper-2);border-radius:6px;overflow:hidden;margin-top:8px;
+  }
+  .progress-bar-fill{height:100%;background:var(--low);border-radius:6px;transition:width .4s;}
+
+  .chart-block{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:14px 12px 8px;margin-bottom:16px;
+  }
+  .chart-block h3{
+    font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:0.02em;
+    text-transform:uppercase;color:var(--ink-soft);margin:0 0 12px;
+  }
+  .chart-canvas-wrap{position:relative;width:100%;height:180px;}
+  .chart-block.tall .chart-canvas-wrap{height:220px;}
+  .risk-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;justify-content:center;}
+  .risk-legend span{
+    font-size:10.5px;color:var(--ink-soft);display:flex;align-items:center;gap:4px;
+  }
+  .risk-legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--steel);color:#fff;padding:11px 18px;border-radius:3px;
+    font-size:13px;font-weight:500;z-index:50;opacity:0;transition:opacity .25s;
+    border-left:4px solid var(--hazard);max-width:80%;text-align:center;
+  }
+  .toast.show{opacity:1;}
+  .shared-note{
+    font-size:10.5px;color:var(--ink-soft);text-align:center;padding:8px 16px 0;line-height:1.4;
+  }
+
+  .module-card{
+    display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;
+    cursor:pointer;transition:transform .1s;
+  }
+  .module-card:active{transform:scale(0.98);}
+  .module-icon{
+    width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+    font-size:26px;flex-shrink:0;
+  }
+  .module-text{flex:1;}
+  .module-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:17px;color:var(--ink);}
+  .module-desc{font-size:12px;color:var(--ink-soft);margin-top:3px;line-height:1.4;}
+  .module-arrow{font-size:20px;color:var(--line);flex-shrink:0;}
+
+  .blast-post{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:16px;margin-bottom:16px;
+  }
+  .blast-post-tag{
+    display:inline-block;background:#FDE7DA;color:var(--high);font-family:'Manrope',sans-serif;
+    font-weight:700;font-size:10.5px;padding:3px 10px;border-radius:999px;margin-bottom:8px;
+  }
+  .blast-post-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:15.5px;color:var(--ink);margin-bottom:4px;}
+  .blast-post-caption{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;white-space:pre-wrap;}
+  .blast-post img{width:100%;border-radius:10px;margin-bottom:10px;display:block;}
+  .blast-post-meta{font-size:11px;color:var(--ink-soft);margin-bottom:10px;}
+  .blast-post-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .blast-post-actions .blast-share-btn, .blast-post-actions .blast-del-btn{flex:1;min-width:100px;}
+  .blast-share-btn{
+    flex:1;background:var(--steel);color:#fff;border:none;border-radius:10px;padding:11px;
+    font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;
+  }
+  .blast-del-btn{
+    background:#fff;color:var(--extreme);border:1.5px solid var(--extreme);border-radius:10px;
+    padding:11px 14px;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;
+  }
+
+  /* WHATSAPP MODAL */
+  #waModal{
+    position:fixed;inset:0;background:rgba(11,30,51,0.55);z-index:90;
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  #waModal.show{display:flex;}
+  .wa-sheet{
+    background:#fff;border-radius:20px 20px 0 0;max-width:520px;width:100%;
+    padding:22px 20px 26px;max-height:80vh;overflow-y:auto;
+    box-shadow:0 -10px 40px rgba(11,30,51,0.3);
+  }
+  .wa-sheet h2{
+    font-family:'Manrope',sans-serif;font-weight:800;font-size:16px;color:var(--ink);margin:0 0 4px;
+  }
+  .wa-sheet .wa-sub{font-size:12px;color:var(--ink-soft);margin:0 0 18px;line-height:1.4;}
+  .wa-group{margin-bottom:14px;}
+  .wa-group-label{
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;color:var(--ink);
+    margin-bottom:6px;display:flex;align-items:center;gap:6px;
+  }
+  .wa-btn{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:#EAFBF0;border:1px solid #BEE8CC;border-radius:10px;
+    padding:11px 14px;margin-bottom:6px;text-decoration:none;color:#0F6B37;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+  }
+  .wa-btn:active{transform:translateY(1px);}
+  .wa-btn .num{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px;color:#178A4C;}
+  .wa-photo-btn{
+    width:100%;display:block;background:#FFF1E8;border:1px solid #F5C9A8;border-radius:10px;
+    padding:11px 14px;margin-bottom:14px;color:#B04A0F;font-family:'Manrope',sans-serif;
+    font-weight:700;font-size:12.5px;cursor:pointer;text-align:center;
+  }
+  .wa-group-btn{
+    width:100%;display:block;background:#E9F0FB;border:1px solid #BFD3F2;border-radius:10px;
+    padding:11px 14px;margin-bottom:6px;color:#1E4E9C;font-family:'Manrope',sans-serif;
+    font-weight:700;font-size:12.5px;cursor:pointer;text-align:center;
+  }
+  .wa-close-btn{
+    width:100%;background:var(--paper-2);color:var(--ink);border:none;border-radius:10px;
+    padding:13px;margin-top:8px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;cursor:pointer;
+  }
+
+  /* LOGIN OVERLAY */
+  #loginOverlay{
+    position:fixed;inset:0;
+    background:radial-gradient(circle at 20% 20%, var(--steel-2), var(--steel) 65%);
+    z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .login-card{
+    background:#fff;border-radius:20px;max-width:380px;width:100%;
+    padding:36px 26px 30px;box-shadow:0 20px 50px rgba(11,30,51,0.35);position:relative;overflow:hidden;
+  }
+  .login-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg, var(--hazard), var(--steel-2));
+  }
+  .login-logo{
+    width:64px;height:64px;border-radius:50%;display:block;margin:0 auto 14px;
+    box-shadow:0 3px 10px rgba(11,30,51,0.25);
+  }
+  .login-card h1{
+    font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;letter-spacing:0.01em;
+    color:var(--ink);margin:0 0 4px;text-align:center;
+  }
+  .login-card .sub{
+    font-size:12px;color:var(--ink-soft);text-align:center;margin:0 0 22px;line-height:1.5;
+  }
+  .login-error{
+    background:#FBE3E3;color:var(--extreme);border-left:3px solid var(--extreme);
+    padding:9px 11px;font-size:12.5px;border-radius:10px;margin-bottom:14px;display:none;
+  }
+  .login-btn{
+    width:100%;background:var(--hazard);color:var(--hazard-ink);border:none;border-radius:10px;
+    padding:14px;margin-top:18px;font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;
+    letter-spacing:0.02em;cursor:pointer;box-shadow:0 4px 14px rgba(234,106,36,0.35);
+  }
+  .login-btn:disabled{opacity:0.5;}
+  .login-footer{
+    text-align:center;font-size:10.5px;color:var(--ink-soft);margin-top:16px;line-height:1.4;
+  }
+  .logout-link{
+    background:none;border:none;color:#C7CEDB;font-size:10.5px;text-decoration:underline;
+    cursor:pointer;padding:0;font-family:'Inter',sans-serif;
+  }
+</style>
+</head>
+<body>
+<div id="loginOverlay">
+  <div class="login-card">
+    <img src="icon-192.png" alt="KTA-TTA Site Sandai" class="login-logo">
+    <h1>KTA-TTA Site Sandai</h1>
+    <p class="sub">Masuk dengan NIK &amp; Nama sesuai data karyawan PT CMI untuk mengakses PICA Field Report.</p>
+    <div class="login-error" id="loginError">NIK atau Nama tidak cocok dengan data karyawan. Periksa kembali.</div>
+    <label>NIK</label>
+    <input type="text" id="loginNik" placeholder="cth. CMI051200006" autocomplete="off">
+    <label>Nama Lengkap</label>
+    <input type="text" id="loginNama" placeholder="Sesuai data karyawan">
+    <button class="login-btn" id="loginBtn">Masuk</button>
+    <div class="login-footer">Login tersimpan selama aplikasi aktif. Jika aplikasi ditutup lebih dari 3 menit, login ulang diperlukan untuk keamanan.</div>
+  </div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="brand-row">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="homeBtn" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:10px;" title="Kembali ke Menu Utama">
+          <img src="icon-192.png" alt="Logo" style="width:38px;height:38px;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);flex-shrink:0;">
+          <div class="brand"><span id="brandTitleText">KTA-TTA SITE SANDAI</span><span id="brandSubtitle">PICA Field Report</span></div>
+        </button>
+      </div>
+      <div class="counter" id="counterBadge"><span id="countLabel">Tersimpan</span><b id="countNum">0</b></div>
+    </div>
+    <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:10.5px;color:#B9BEC2;" id="loggedInAs"></span>
+      <button class="logout-link" id="logoutBtn">Ganti Pengguna</button>
+    </div>
+  </header>
+  <div class="conn-status" id="connStatus">Menghubungkan ke database...</div>
+
+  <div class="tabs" id="ktattaTabs" style="display:none;">
+    <div class="tab active" data-view="input">Input Baru</div>
+    <div class="tab" data-view="dashboard">Dashboard</div>
+    <div class="tab" data-view="riwayat">Riwayat</div>
+  </div>
+  <div class="tabs" id="blastTabs" style="display:none;">
+    <div class="tab active" data-bview="compose">Buat Baru</div>
+    <div class="tab" data-bview="feed">Feed Poster</div>
+  </div>
+  <div class="tabs" id="sgTabs" style="display:none;">
+    <div class="tab active" data-sgview="input">Input Baru</div>
+    <div class="tab" data-sgview="dashboard">Dashboard</div>
+    <div class="tab" data-sgview="riwayat">Riwayat</div>
+  </div>
+
+  <main>
+    <!-- ===== HOME SCREEN ===== -->
+    <div class="view active" id="view-home">
+      <div class="module-card" id="openKtaTta">
+        <div class="module-icon" style="background:var(--steel);">📋</div>
+        <div class="module-text">
+          <div class="module-title">KTA-TTA</div>
+          <div class="module-desc">Input temuan PICA, dashboard analitik, riwayat & export Excel.</div>
+        </div>
+        <div class="module-arrow">→</div>
+      </div>
+      <div class="module-card" id="openBlast">
+        <div class="module-icon" style="background:var(--hazard);">📣</div>
+        <div class="module-text">
+          <div class="module-title">CITA Blast</div>
+          <div class="module-desc">Bagikan poster, pengumuman & materi sosialisasi ke seluruh karyawan.</div>
+        </div>
+        <div class="module-arrow">→</div>
+      </div>
+      <div class="module-card" id="openSpeedgun">
+        <div class="module-icon" style="background:#0F766E;">🚨</div>
+        <div class="module-text">
+          <div class="module-title">SpeedGun</div>
+          <div class="module-desc">Database inspeksi kecepatan kendaraan, dashboard analitik & export Excel.</div>
+        </div>
+        <div class="module-arrow">→</div>
+      </div>
+      <div class="shared-note" style="margin-top:18px;">Pilih menu di atas untuk memulai.</div>
+    </div>
+
+    <div class="view" id="view-input">
+      <div class="section-label">Referensi Inspeksi</div>
+      <label>Tanggal Pelaksanaan</label>
+      <input type="date" id="f_tanggal">
+
+      <div class="row2">
+        <div>
+          <label>Area Inspeksi</label>
+          <input type="text" id="f_area" list="areaList" placeholder="Pilih / ketik baru">
+        </div>
+        <div>
+          <label>Lokasi</label>
+          <input type="text" id="f_lokasi" list="lokasiList" placeholder="Pilih / ketik baru">
+        </div>
+      </div>
+
+      <hr class="tear">
+      <div class="section-label">Detail Temuan</div>
+      <label>Temuan / Keterangan</label>
+      <textarea id="f_temuan" placeholder="Deskripsikan kondisi yang ditemukan..."></textarea>
+
+      <label>Potensi Risiko</label>
+      <textarea id="f_potensi" placeholder="Apa yang bisa terjadi akibat temuan ini?"></textarea>
+
+      <label>Tindakan Perbaikan (Rekomendasi)</label>
+      <textarea id="f_tindakan" placeholder="Tindakan korektif yang disarankan..."></textarea>
+
+      <label>Foto Temuan (opsional)</label>
+      <input type="file" id="f_foto" accept="image/*">
+      <div class="photo-preview-wrap" id="photoPreviewWrap" style="display:none;">
+        <img id="photoPreview" alt="Preview foto temuan">
+        <button type="button" id="removePhotoBtn">Hapus Foto</button>
+      </div>
+
+      <hr class="tear">
+      <div class="section-label">Klasifikasi &amp; Tindak Lanjut</div>
+
+      <label>PIC (bisa pilih lebih dari satu)</label>
+      <div class="pic-chip-wrap" id="picChipWrap"></div>
+
+      <label>Due Date</label>
+      <input type="date" id="f_duedate">
+
+      <label>Kategori Risiko (Jenis Bahaya)</label>
+      <select id="f_kategori">
+        <option value="">— Pilih Kategori —</option>
+      </select>
+
+      <label>Tingkat Keparahan</label>
+      <div class="risk-picker" id="riskPicker">
+        <div class="risk-btn" data-r="AA">AA<small>Extreme</small></div>
+        <div class="risk-btn" data-r="A">A<small>High</small></div>
+        <div class="risk-btn" data-r="B">B<small>Moderate</small></div>
+        <div class="risk-btn" data-r="C">C<small>Low</small></div>
+      </div>
+      <div class="stamp-wrap" id="stampWrap">
+        <div class="stamp-empty">Pilih tingkat keparahan<br>untuk melihat stempel klasifikasi</div>
+      </div>
+      <div class="hint">Klasifikasi bersifat kualitatif berdasarkan jenis bahaya &amp; konsekuensi terburuk yang wajar (bukan skor HIRARC resmi) — mengikuti metodologi dashboard PICA existing.</div>
+
+      <label>Dibuat Oleh (Safety Patrol)</label>
+      <input type="text" id="f_dibuatoleh" placeholder="Nama pengawas/inspektor">
+
+      <button class="submit-btn" id="submitBtn">Simpan Temuan</button>
+      <button class="cancel-edit" id="cancelEditBtn" style="display:none;">Batal Edit</button>
+    </div>
+
+    <div class="view" id="view-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Total Temuan</div></div>
+        <div class="stat-card open"><div class="num" id="statOpen">0</div><div class="lbl">Status Open</div></div>
+        <div class="stat-card close"><div class="num" id="statClose">0</div><div class="lbl">Sudah Close</div></div>
+        <div class="stat-card overdue"><div class="num" id="statOverdue">0</div><div class="lbl">Terlambat</div></div>
+        <div class="stat-card wide">
+          <div class="lbl" style="margin-bottom:2px;">% Penyelesaian</div>
+          <div class="num" id="statPct">0%</div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="statPctBar" style="width:0%;"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Distribusi Kategori Risiko (AA/A/B/C)</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartRiskLevel"></canvas></div>
+        <div class="risk-legend">
+          <span><i class="dot" style="background:#C1272D;"></i>AA Extreme</span>
+          <span><i class="dot" style="background:#E8720C;"></i>A High</span>
+          <span><i class="dot" style="background:#D9A400;"></i>B Moderate</span>
+          <span><i class="dot" style="background:#3E7A4C;"></i>C Low</span>
+        </div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Status Tenggat Waktu</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartTenggat"></canvas></div>
+      </div>
+
+      <div class="chart-block tall">
+        <h3>Temuan per Lokasi (Top 8)</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartLokasi"></canvas></div>
+      </div>
+
+      <div class="chart-block tall">
+        <h3>Temuan per Kategori Bahaya</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartKategori"></canvas></div>
+      </div>
+
+      <div class="chart-block tall">
+        <h3>Beban Temuan per PIC</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartPic"></canvas></div>
+      </div>
+    </div>
+
+    <div class="view" id="view-riwayat">
+      <div class="riwayat-toolbar">
+        <button class="export-btn" id="exportBtn">Export ke Excel (.xlsx)</button>
+      </div>
+      <div class="riwayat-toolbar">
+        <button class="export-btn secondary" id="clearBtn">Kosongkan Semua Data</button>
+      </div>
+      <div id="ticketList"></div>
+    </div>
+
+    <!-- ===== CITA BLAST — BUAT BARU ===== -->
+    <div class="view" id="view-blast-compose">
+      <div class="section-label">Buat Poster / Pengumuman</div>
+      <label>Judul</label>
+      <input type="text" id="bl_judul" placeholder="cth. Sosialisasi APD Baru">
+
+      <label>Kategori</label>
+      <select id="bl_kategori">
+        <option value="Poster">Poster</option>
+        <option value="Pengumuman">Pengumuman</option>
+        <option value="Sosialisasi">Sosialisasi</option>
+      </select>
+
+      <label>Keterangan / Caption</label>
+      <textarea id="bl_caption" placeholder="Tulis pesan yang menyertai poster/pengumuman ini..."></textarea>
+
+      <label>Gambar Poster</label>
+      <input type="file" id="bl_foto" accept="image/*">
+      <div class="photo-preview-wrap" id="blPhotoPreviewWrap" style="display:none;">
+        <img id="blPhotoPreview" alt="Preview poster">
+        <button type="button" id="blRemovePhotoBtn">Hapus Gambar</button>
+      </div>
+
+      <button class="submit-btn" id="blSubmitBtn">Publikasikan</button>
+      <div class="hint">Poster akan langsung tampil di tab "Feed Poster" dan bisa dilihat oleh semua pengguna aplikasi ini.</div>
+    </div>
+
+    <!-- ===== CITA BLAST — FEED ===== -->
+    <div class="view" id="view-blast-feed">
+      <div id="blastFeedList"></div>
+    </div>
+
+    <!-- ===== SPEEDGUN — INPUT BARU ===== -->
+    <div class="view" id="view-sg-input">
+      <div class="section-label">Data Pengukuran Kecepatan</div>
+
+      <div class="row2">
+        <div>
+          <label>Tanggal</label>
+          <input type="date" id="sg_tanggal">
+        </div>
+        <div>
+          <label>Jam</label>
+          <input type="time" id="sg_jam">
+        </div>
+      </div>
+
+      <label>Lokasi</label>
+      <input type="text" id="sg_lokasi" list="sgLokasiList" placeholder="Pilih / ketik baru">
+
+      <label>Sarana (No. Unit)</label>
+      <input type="text" id="sg_unit" placeholder="cth. DT.215">
+
+      <div class="row2">
+        <div>
+          <label>Perusahaan</label>
+          <select id="sg_perusahaan">
+            <option value="">— Pilih —</option>
+          </select>
+        </div>
+        <div>
+          <label>Arah</label>
+          <select id="sg_arah">
+            <option value="K">K (Keluar)</option>
+            <option value="M">M (Masuk)</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Kecepatan Terukur (Km/h)</label>
+      <input type="number" id="sg_kecepatan" placeholder="cth. 55" inputmode="numeric">
+
+      <div class="stamp-wrap" id="sgStampWrap">
+        <div class="stamp-empty">Isi kecepatan untuk melihat status</div>
+      </div>
+      <div class="hint">Standar: maksimal <span id="sgLimitText">60</span> Km/jam. Toleransi ±<span id="sgToleranceText">5</span> Km/jam (Waspada). Lebih dari itu otomatis Pelanggaran.</div>
+
+      <label>Catatan (opsional)</label>
+      <textarea id="sg_catatan" placeholder="cth. Surat sudah dikirim ke perusahaan terkait..."></textarea>
+
+      <label>Pelaksana Inspeksi</label>
+      <input type="text" id="sg_pelaksana" placeholder="Nama petugas">
+
+      <button class="submit-btn" id="sgSubmitBtn">Simpan Data</button>
+      <button class="cancel-edit" id="sgCancelEditBtn" style="display:none;">Batal Edit</button>
+    </div>
+
+    <!-- ===== SPEEDGUN — DASHBOARD ===== -->
+    <div class="view" id="view-sg-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num" id="sgStatTotal">0</div><div class="lbl">Total Pengukuran</div></div>
+        <div class="stat-card"><div class="num" id="sgStatAvg">0</div><div class="lbl">Kec. Rata-Rata (Km/h)</div></div>
+        <div class="stat-card open"><div class="num" id="sgStatMax">0</div><div class="lbl">Kec. Maksimum (Km/h)</div></div>
+        <div class="stat-card overdue"><div class="num" id="sgStatViolation">0</div><div class="lbl">Pelanggaran (&gt;65)</div></div>
+        <div class="stat-card wide">
+          <div class="lbl" style="margin-bottom:2px;">% Kepatuhan</div>
+          <div class="num" id="sgStatCompliance">0%</div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="sgStatComplianceBar" style="width:0%;"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Komposisi Status Kecepatan</h3>
+        <div class="chart-canvas-wrap"><canvas id="sgChartStatus"></canvas></div>
+        <div class="risk-legend">
+          <span><i class="dot" style="background:#178A4C;"></i>Normal</span>
+          <span><i class="dot" style="background:#C58A05;"></i>Waspada</span>
+          <span><i class="dot" style="background:#C0272B;"></i>Pelanggaran</span>
+        </div>
+      </div>
+
+      <div class="chart-block tall">
+        <h3>Rekap per Lokasi (Rata-Rata Kecepatan)</h3>
+        <div class="chart-canvas-wrap"><canvas id="sgChartLokasi"></canvas></div>
+      </div>
+
+      <div class="chart-block tall">
+        <h3>Rekap per Perusahaan (Rata-Rata Kecepatan)</h3>
+        <div class="chart-canvas-wrap"><canvas id="sgChartPerusahaan"></canvas></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Tren Harian (Jumlah Pengukuran)</h3>
+        <div class="chart-canvas-wrap"><canvas id="sgChartTren"></canvas></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Top 10 Kecepatan Tertinggi</h3>
+        <div id="sgTop10List"></div>
+      </div>
+    </div>
+
+    <!-- ===== SPEEDGUN — RIWAYAT ===== -->
+    <div class="view" id="view-sg-riwayat">
+      <div class="riwayat-toolbar">
+        <button class="export-btn" id="sgExportBtn">Export ke Excel (.xlsx)</button>
+      </div>
+      <div class="riwayat-toolbar">
+        <button class="export-btn secondary" id="sgClearBtn">Kosongkan Semua Data</button>
+      </div>
+      <div id="sgTicketList"></div>
+    </div>
+  </main>
+
+  <div class="shared-note">Data tersimpan di database bersama (Firebase) dan bisa dilihat/diisi oleh semua pengawas yang membuka link ini. Export berkala ke Excel untuk digabungkan ke dashboard master.</div>
+</div>
+
+<datalist id="areaList"></datalist>
+<datalist id="lokasiList"></datalist>
+<datalist id="sgLokasiList"></datalist>
+<div class="toast" id="toast"></div>
+
+<div id="waModal">
+  <div class="wa-sheet">
+    <h2>Kirim Notifikasi WhatsApp</h2>
+    <p class="wa-sub">Tap salah satu nomor untuk membuka WhatsApp dengan pesan yang sudah terisi. Kirim ke minimal satu nomor per PIC.</p>
+    <div id="waGroups"></div>
+    <button class="wa-close-btn" id="waCloseBtn">Tutup</button>
+  </div>
+</div>
+
+<script>
+// ====== FIREBASE CONFIG ======
+const firebaseConfig = {
+  apiKey: "AIzaSyDF2bvepFq0zgFH9NBitpc3K2rpDrBGRJs",
+  authDomain: "kta-tta-cmi-sandai.firebaseapp.com",
+  projectId: "kta-tta-cmi-sandai",
+  storageBucket: "kta-tta-cmi-sandai.firebasestorage.app",
+  messagingSenderId: "382761472236",
+  appId: "1:382761472236:web:7bffb4c53bc030ecc095c9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch((err)=>{
+  if(err.code === 'failed-precondition'){
+    console.warn('Offline persistence hanya bisa 1 instance aktif; tab lain mungkin sudah memegangnya.');
+  } else if(err.code === 'unimplemented'){
+    console.warn('Browser ini tidak mendukung penyimpanan offline (IndexedDB).');
+  }
+});
+const COLLECTION = "pica_findings";
+
+const AREA_OPTIONS = ["Area Front Loading Blok 4","Area Front Loading Blok 5","Area Hauling Barging","Area Jalan Hauling","Area Jalan Mining","Area Lab / Preparasi","Area Land Clearing","Area Mining / Blok 1","Area Mining / Blok 4","Area Mining / Blok 4-5","Area Timbangan & Stockpile","Disposal B & C","Disposal Blok 23","Gudang Logistik","Hauling Road KM 55-32","Jetty Keramat","Jetty Simpang Keramat","Kolam BBP 5-7","Kolam WP 5-7","Laboratorium & Preparasi","Land Clearing","Mining Road","Rumah Genset","Washing Plant 3-4","Washing Plant 5-7"];
+const LOKASI_OPTIONS = ["Blok 1","Blok 1 & 4","Blok 4","Blok 5","Blok 19","Disposal B & C","Disposal Blok 23","Gudang Logistik","Hauling Barging","JSK","Jalan Hauling","Jalan Mining","KM 09","KM 32-55","KM 48","Laboratorium","Land Clearing","Pos Checker","Pos Sungai Putih","R.Katanax","Ruang Preparasi","Rumah Genset","Tanggul WP 57","Tangki BBC","WP 3-4","WP 5-7"];
+const PIC_OPTIONS = ["HSE","Produksi","Project","Plant","QAQC","Lab","HRGA","Reklamasi","MPE","CSR Security","LA","Survey","PT JUS","PT PIK","PT SIE","PT WWPI","PT WPK","PT MAT"];
+const PIC_WA = {
+  "HSE": [
+    {name:"Dody Patah K", num:"081346845602"},
+    {name:"Idola Kulana", num:"082244161664"},
+    {name:"Dokter Marhara S.I.P", num:"082298336394"},
+    {name:"Aldice Sekar Arum", num:"08970918670"}
+  ],
+  "Produksi": [
+    {name:"Fathur", num:"081242234439"},
+    {name:"Anton", num:"081392946000"}
+  ],
+  "Project": [
+    {name:"Rudi", num:"082150452849"},
+    {name:"Vian", num:"082223307753"}
+  ],
+  "Plant": [
+    {name:"Sugeng", num:"081333663993"},
+    {name:"Rochim", num:"081345947105"}
+  ],
+  "QAQC": [
+    {name:"Ginting", num:"081370462002"},
+    {name:"Hamesh", num:"085245502362"}
+  ],
+  "Lab": [
+    {name:"Guntur", num:"082370900999"}
+  ],
+  "HRGA": [
+    {name:"Gema", num:"08115522359"},
+    {name:"Irsyad", num:"082288356303"}
+  ],
+  "Reklamasi": [
+    {name:"Purnomo", num:"082158689459"},
+    {name:"PIC Reklamasi", num:"081257929480"}
+  ],
+  "MPE": [
+    {name:"Romi", num:"085229185898"}
+  ],
+  "CSR Security": [
+    {name:"Doni", num:"081233701678"}
+  ],
+  "LA": [
+    {name:"Budiono", num:"082152741358"}
+  ],
+  "Survey": [
+    {name:"Aji", num:"085224069592"},
+    {name:"Imam Naro", num:"081278464778"}
+  ]
+};
+const PIC_GROUPS = {
+  "HSE": [
+    {name:"HSE HIJAU", link:"https://chat.whatsapp.com/CbWYlMZVU4V57ZQNHGAsu4"},
+    {name:"HSE MERAH", link:"https://chat.whatsapp.com/DFPFMqgadLHI8yGkF7sWWb"}
+  ]
+};
+const KATEGORI_OPTIONS = ["APD & Kesehatan Kerja","Fasilitas Darurat (APAR/P3K/Eyewash)","Housekeeping & Kebersihan","Infrastruktur & Fasilitas","Kebakaran & Kelistrikan","Lainnya","Lalu Lintas & Operasional Unit","Lingkungan (B3/Tumpahan/Limbah)","Longsor & Stabilitas Lereng/Tanggul"];
+
+const RISK_META = {
+  AA:{tingkat:"Extreme", rentang:"> 16"},
+  A:{tingkat:"High", rentang:"10 – 16"},
+  B:{tingkat:"Moderate", rentang:"5 – 9"},
+  C:{tingkat:"Low", rentang:"< 5"}
+};
+
+// ====== DAFTAR KARYAWAN (untuk validasi login NIK + Nama) ======
+const EMPLOYEES = [{"nik": "CMI051200006", "nama": "Wildan Syuyuti Romadhon"}, {"nik": "CMI230500200", "nama": "Sugeng Sulistiyo"}, {"nik": "CMI180900095", "nama": "Lia Darina Fauzi"}, {"nik": "CMI250700305", "nama": "Romy Abdul Hanif"}, {"nik": "CMI260300442", "nama": "Muhammad Daffa Naufaldy"}, {"nik": "CMI250800316", "nama": "Ichsan Nul Hakim"}, {"nik": "CMI2505000101", "nama": "Rajuli"}, {"nik": "CMI2505000102", "nama": "Agung Turyandi Suparmanto"}, {"nik": "CMI251000360", "nama": "Anugerah Choliq Restu Aji"}, {"nik": "CMI250500285", "nama": "Muhamad Imam Naro, S.T"}, {"nik": "CMI260600550", "nama": "Aji Sugiantoro"}, {"nik": "CMI241100239", "nama": "Faldy Alfian Namara, S.T"}, {"nik": "CMI260100417", "nama": "Depi Rudiana"}, {"nik": "CMI260200432", "nama": "Muhammad Zulfa Irsyad"}, {"nik": "CMI2504000095", "nama": "Reza Pachruji"}, {"nik": "CMI2506000120", "nama": "Yoga Abdul Malik Putra"}, {"nik": "CMI2506000118", "nama": "Dimas Satriawan"}, {"nik": "CMI2506000119", "nama": "Fauzan Pamungkas"}, {"nik": "CMI2208000040", "nama": "Sudirja"}, {"nik": "CMI2410000057", "nama": "Jeri"}, {"nik": "CMI2510000212", "nama": "Muhammad Asram"}, {"nik": "CMI2509000194", "nama": "Herliansyah"}, {"nik": "CMI2510000213", "nama": "Hariyadi"}, {"nik": "CMI2508000152", "nama": "Muhamad Khafis"}, {"nik": "CMI2508000153", "nama": "Redy Yansyah"}, {"nik": "CMI2601000238", "nama": "Eko"}, {"nik": "CMI2602000242", "nama": "Fito Susanto"}, {"nik": "CMI2605000257", "nama": "Juprian Trilanda"}, {"nik": "CMI2605000258", "nama": "Yoga Putra Wiratama"}, {"nik": "CMI2605000265", "nama": "Nur Arasid"}, {"nik": "CMI2605000267", "nama": "Dora"}, {"nik": "CMI2606000323", "nama": "Murazikin"}, {"nik": "CMI240541521", "nama": "Ahmad Sabikun, S.T"}, {"nik": "CMI250741523", "nama": "L'va Arta Ginatari"}, {"nik": "CMI251041522", "nama": "Indra"}, {"nik": "CMI191200149", "nama": "Dedy Dermawan"}, {"nik": "CMI250741469", "nama": "Dony Setyawan"}, {"nik": "CMI210300165", "nama": "Sandi Oktapiandi"}, {"nik": "CMI260200444", "nama": "Boris Yeltsin Rumapea"}, {"nik": "CMI260600506", "nama": "Leonardo Manullang"}, {"nik": "CMI260500507", "nama": "Maureen Meisya Princessa Br Tampubolon"}, {"nik": "CMI1902000007", "nama": "Alpiansyah"}, {"nik": "CMI2010000014", "nama": "Petris Nasrani"}, {"nik": "CMI2504000093", "nama": "Dina Yosiana Oci"}, {"nik": "CMI1903000009", "nama": "Amat"}, {"nik": "CMI1712000003", "nama": "Eri Tri Hardianto"}, {"nik": "CMI2110000033", "nama": "Syafril M. Yamin"}, {"nik": "CMI2010000016", "nama": "Karwandi"}, {"nik": "CMI2110000034", "nama": "Supardi (A)"}, {"nik": "CMI2110000035", "nama": "Nanda Sarianto"}, {"nik": "CMI2110000036", "nama": "Amir Yanto"}, {"nik": "CMI2307000050", "nama": "Wendi"}, {"nik": "CMI2507000130", "nama": "Hariandi"}, {"nik": "CMI2507000131", "nama": "Supardi (B)"}, {"nik": "CMI2507000132", "nama": "Rahmad Ajunda"}, {"nik": "CMI2507000133", "nama": "Regi Saputra"}, {"nik": "CMI2507000134", "nama": "Muhammad Riduan"}, {"nik": "CMI2507000135", "nama": "Ricki Wardi"}, {"nik": "CMI2507000136", "nama": "Rangga Purwanto"}, {"nik": "CMI2507000137", "nama": "Bambang"}, {"nik": "CMI2507000138", "nama": "Juni"}, {"nik": "CMI2507000139", "nama": "Junaidi"}, {"nik": "CMI2507000140", "nama": "Jumali"}, {"nik": "CMI2507000141", "nama": "Juani"}, {"nik": "CMI2508000149", "nama": "Welly Pranedi Wiranda"}, {"nik": "CMI2508000150", "nama": "Satrimansah"}, {"nik": "CMI2512000229", "nama": "Leo Waldi"}, {"nik": "CMI260600509", "nama": "Herlan Iskandar"}, {"nik": "CMI071000019", "nama": "Budyono"}, {"nik": "CMI090100027", "nama": "Isnadi"}, {"nik": "CMI170300060", "nama": "Choriza A Setiawan"}, {"nik": "CMI260400471", "nama": "Hendrew Steven"}, {"nik": "CMI2507000129", "nama": "Desi Hariyanti"}, {"nik": "CMI2410000060", "nama": "Andri"}, {"nik": "CMI2410000061", "nama": "Robianto"}, {"nik": "CMI2410000062", "nama": "Suryadi"}, {"nik": "CMI2410000063", "nama": "Didik Tri Wahyudi"}, {"nik": "CMI2410000064", "nama": "Mahardika Sunardi"}, {"nik": "CMI2410000065", "nama": "Pandi Saputra"}, {"nik": "CMI2607000350", "nama": "Hamadi"}, {"nik": "CMI181100102", "nama": "Larry Tuasela"}, {"nik": "CMI190600127", "nama": "Budi Harsono"}, {"nik": "CMI250700304", "nama": "Rio Bagas Prakoso"}, {"nik": "CMI181100101", "nama": "Nur Abidin"}, {"nik": "CMI180900093", "nama": "Setiyono"}, {"nik": "CMI190800134", "nama": "Nurfianto"}, {"nik": "CMI241241246", "nama": "Mujiyanto"}, {"nik": "CMI250500286", "nama": "Bambang Sutrisno"}, {"nik": "CMI210400167", "nama": "Kristiani Noviantika Tadong"}, {"nik": "CMI250600294", "nama": "Astri Septiyana"}, {"nik": "CMI170900069", "nama": "Rini"}, {"nik": "CMI180700087", "nama": "Jhon Yohanes Pairin"}, {"nik": "CMI260600492", "nama": "Alfian Maulana"}, {"nik": "CMI2304000049", "nama": "Supandi"}, {"nik": "CMI2010000017", "nama": "Minggi Supriadi"}, {"nik": "CMI2407000055", "nama": "Bayu Anggara"}, {"nik": "CMI2410000066", "nama": "Lukma Genta"}, {"nik": "CMI2507000147", "nama": "Mohamad Rafi'ul Anam"}, {"nik": "CMI2509000160", "nama": "Mayda Arif Nugroho"}, {"nik": "CMI2505000107", "nama": "Alda Lettysia Augusta"}, {"nik": "CMI2405000054", "nama": "Hermanus Rusli"}, {"nik": "CMI2503000071", "nama": "Elisabet"}, {"nik": "CMI2503000072", "nama": "Fius Tino"}, {"nik": "CMI2508000151", "nama": "Januardi Firda Saputra"}, {"nik": "CMI2509000195", "nama": "Teja Permana"}, {"nik": "CMI2509000196", "nama": "Erris Sukrisno"}, {"nik": "CMI2509000197", "nama": "Herlangga Manto"}, {"nik": "CMI2509000198", "nama": "Agustinus Yakobus Riko"}, {"nik": "CMI2509000199", "nama": "Domianus Tambun"}, {"nik": "CMI2509000200", "nama": "Jesco Pranata"}, {"nik": "CMI2509000201", "nama": "Herpandi"}, {"nik": "CMI2510000205", "nama": "Santi"}, {"nik": "CMI2607000347", "nama": "Bintang Rizqy Fachrianto"}, {"nik": "CMI2607000348", "nama": "Abib Saputra"}, {"nik": "CMI2607000349", "nama": "Eka Teguh Firmansyah"}, {"nik": "CMI260600536", "nama": "Jaenudin"}, {"nik": "CMI260600537", "nama": "Rizki Wisnu Widiawan"}, {"nik": "CMI260600542", "nama": "Khoerudin"}, {"nik": "CMI260600520", "nama": "Wahyu Bintoro"}, {"nik": "CMI260600527", "nama": "Saiful"}, {"nik": "CMI061200012", "nama": "Haryoko"}, {"nik": "CMI240600225", "nama": "Adas Karyo"}, {"nik": "CMI190800133", "nama": "Hasan Ansori"}, {"nik": "CMI181000098", "nama": "Lestari Yudiarjo"}, {"nik": "CMI181200103", "nama": "Fajar Susanto"}, {"nik": "CMI180800091", "nama": "Jefri Andris Rumbay"}, {"nik": "CMI250600293", "nama": "Rudi Romana"}, {"nik": "CMI240500224", "nama": "Aron Jontua Tarigan"}, {"nik": "CMI181200106", "nama": "Azis Ramdani"}, {"nik": "CMI181000096", "nama": "Dedy Sancoko"}, {"nik": "CMI181100100", "nama": "Iyep Supriadi"}, {"nik": "CMI260600541", "nama": "Nur Eka Mahendra"}, {"nik": "CMI190800139", "nama": "Ferry Anggara Putra"}, {"nik": "CMI181200107", "nama": "Hafsah"}, {"nik": "CMI250600296", "nama": "Najib Atif Hamami"}, {"nik": "CMI2504000086", "nama": "Ghaza Maulana Azka Sutrisna"}, {"nik": "CMI2512000230", "nama": "Muhamad Andika Misbakhul"}, {"nik": "CMI2504000087", "nama": "Rizky Anugrah Pratama"}, {"nik": "CMI2505000112", "nama": "Dimas Reza Evan Dika"}, {"nik": "CMI1908000012", "nama": "Abdul Manaf"}, {"nik": "CMI2410000058", "nama": "Sifa Salsabila"}, {"nik": "CMI2208000043", "nama": "William Anthony"}, {"nik": "CMI250500283", "nama": "Utis"}, {"nik": "CMI250300265", "nama": "Saeful Anwar"}, {"nik": "CMI2503000069", "nama": "Edo Fransetiyo"}, {"nik": "CMI2010000018", "nama": "Sugiarto"}, {"nik": "CMI2607000342", "nama": "Satria Ramadhan"}, {"nik": "CMI2606000284", "nama": "Sarmadi (A)"}, {"nik": "CMI2010000019", "nama": "Lipi Triadi"}, {"nik": "CMI2010000020", "nama": "Budi Raharjo"}, {"nik": "CMI2208000041", "nama": "Doni Damara"}, {"nik": "CMI2509000179", "nama": "Rahmad Ilahi"}, {"nik": "CMI2509000180", "nama": "Dedi Subandi"}, {"nik": "CMI2509000181", "nama": "Muhammad Qairul Rafik"}, {"nik": "CMI2509000182", "nama": "Indra Wansah"}, {"nik": "CMI2509000183", "nama": "Andika Saputra"}, {"nik": "CMI2509000184", "nama": "Iwan Nadi"}, {"nik": "CMI2509000185", "nama": "Tomi"}, {"nik": "CMI2509000187", "nama": "Muhammad Juliansyah"}, {"nik": "CMI2509000188", "nama": "Khaidir"}, {"nik": "CMI2509000189", "nama": "I'if Supri"}, {"nik": "CMI2509000191", "nama": "Muhammad Abidin"}, {"nik": "CMI2509000192", "nama": "Irwandi"}, {"nik": "CMI2509000193", "nama": "Roy Jordi"}, {"nik": "CMI100100034", "nama": "Rusdi Purnomo"}, {"nik": "CMI100300035", "nama": "Alianto"}, {"nik": "CMI230200195", "nama": "Resty Yulia Rahman"}, {"nik": "CMI181200104", "nama": "Teguh Widiharto"}, {"nik": "CMI181200105", "nama": "Yadi Nuryadi"}, {"nik": "CMI181200110", "nama": "Suberto Simanjuntak"}, {"nik": "CMI230200196", "nama": "Andy Refa Novrianto"}, {"nik": "CMI080800024", "nama": "Mimi Sandra"}, {"nik": "CMI260400493", "nama": "Widya Apriana Mukti Wibowo"}, {"nik": "CMI260700564", "nama": "Titis Diyat Fadhillah"}, {"nik": "CMI2010000021", "nama": "Supiandi"}, {"nik": "CMI2303000048", "nama": "Titus Victorius Ferdy"}, {"nik": "CMI250500279", "nama": "Agus Hermawan"}, {"nik": "CMI2010000015", "nama": "Rizki Suhendratmo"}, {"nik": "CMI2410000059", "nama": "Bella Apriyanti"}, {"nik": "CMI2010000022", "nama": "Hari Winarno"}, {"nik": "CMI2208000042", "nama": "Muhammad Jaine Pikri"}, {"nik": "CMI2010000023", "nama": "Rosmiati"}, {"nik": "CMI2605000256", "nama": "Isah"}, {"nik": "CMI2509000163", "nama": "Ronaldi"}, {"nik": "CMI2509000164", "nama": "Hairani"}, {"nik": "CMI2509000166", "nama": "Yudi"}, {"nik": "CMI2509000167", "nama": "Jodi"}, {"nik": "CMI2509000168", "nama": "Andreas Iyas"}, {"nik": "CMI2509000169", "nama": "Antoro"}, {"nik": "CMI2509000204", "nama": "Hairon"}, {"nik": "CMI2509000171", "nama": "Staniy Kaka"}, {"nik": "CMI2509000172", "nama": "M. Doni"}, {"nik": "CMI2509000173", "nama": "Fransiskus Wiro Aprianto"}, {"nik": "CMI2509000174", "nama": "Tarmiji"}, {"nik": "CMI2509000177", "nama": "Ema"}, {"nik": "CMI2607000346", "nama": "Muhammad Rizal"}, {"nik": "CMI251200392", "nama": "Gema Ekki Putra"}, {"nik": "CMI200600154", "nama": "Maya"}, {"nik": "CMI260300423", "nama": "Arif Munandar"}, {"nik": "CMI2510000214", "nama": "Bangun Adi Pangestu"}, {"nik": "CMI2503000070", "nama": "Dearnie Regina Lestari"}, {"nik": "CMI2205000039", "nama": "Nelly Chrismonika Hutasoit"}, {"nik": "CMI2511000216", "nama": "Wempie Jaguar Denaly"}, {"nik": "CMI2107000032", "nama": "Marta Liza Wirta"}, {"nik": "CMI2506000114", "nama": "Ripaldi"}, {"nik": "CMI260100394", "nama": "Parluhutan Sagala"}, {"nik": "CMI260700538", "nama": "Irsyadul Fikri"}, {"nik": "CMI2504000088", "nama": "Jumiarni"}, {"nik": "CMI2605000255", "nama": "Damar Wulan"}, {"nik": "CMI2607000335", "nama": "Siti Amelia"}, {"nik": "CMI2210000046", "nama": "Abdul Qodir Audah, SP"}, {"nik": "CMI1011000001", "nama": "Mohammad Choirun Anwar"}, {"nik": "CMI2010000024", "nama": "Ahmad Satriadi"}, {"nik": "CMI2507000142", "nama": "Ismail"}, {"nik": "CMI2505000109", "nama": "Kusnadi"}, {"nik": "CMI2510000209", "nama": "Muhamad Ardiansyah"}, {"nik": "CMI2510000206", "nama": "Rahmad Mujaki"}, {"nik": "CMI2503000073", "nama": "Rahmat Syuef"}, {"nik": "CMI2510000208", "nama": "Restu Saputra"}, {"nik": "CMI2511000225", "nama": "Yuda Pratama"}, {"nik": "CMI2605000261", "nama": "Dini Mariska"}, {"nik": "CMI2605000268", "nama": "Sery Ulandari"}, {"nik": "CMI2607000343", "nama": "Geby Sekartaji"}, {"nik": "CMI2506000116", "nama": "Kasmiranto"}, {"nik": "CMI2010000026", "nama": "M. Yasir"}, {"nik": "CMI2010000029", "nama": "Parida"}, {"nik": "CMI2010000025", "nama": "Ranisah"}, {"nik": "CMI2107000031", "nama": "Rukati"}, {"nik": "CMI2504000096", "nama": "Salatiah"}, {"nik": "CMI2512000227", "nama": "Melda Arianti"}, {"nik": "CMI2601000240", "nama": "Maya (B)"}, {"nik": "CMI2604000252", "nama": "Ika Vita Maulidya"}, {"nik": "CMI2606000295", "nama": "Ernawati"}, {"nik": "CMI2607000356", "nama": "Kiki Lovita Sari"}, {"nik": "CMI2010000027", "nama": "Ema Juliana"}, {"nik": "CMI2401000053", "nama": "Erna Sari"}, {"nik": "CMI2211000047", "nama": "Nike Erwina"}, {"nik": "CMI2510000215", "nama": "Peni Halipah"}, {"nik": "CMI2503000074", "nama": "Uun Kurniasih"}, {"nik": "CMI2010000028", "nama": "Wiwin Yuliatin"}, {"nik": "CMI2512000228", "nama": "Veni Septiani"}, {"nik": "CMI2307000051", "nama": "Bambang Juliansyah"}, {"nik": "CMI2506000115", "nama": "Ermilius Selu Jimmi"}, {"nik": "CMI2509000203", "nama": "Muhammad Erdi"}, {"nik": "CMI2409000056", "nama": "Herry Jumadi"}, {"nik": "CMI2605000259", "nama": "Retno"}, {"nik": "CMI2606000283", "nama": "Rudi R"}, {"nik": "CMI2511000224", "nama": "Miko Andrianto"}, {"nik": "CMI2505000108", "nama": "Suhannadi"}, {"nik": "CMI260500472", "nama": "Dody Patah Kristanto"}, {"nik": "HPM240100010", "nama": "Purnomo"}, {"nik": "CMI100700040", "nama": "Munawar Fuadi"}, {"nik": "CMI180900092", "nama": "Kunkun Kurnia"}, {"nik": "CMI230900208", "nama": "Aldice Sekar Arum R"}, {"nik": "CMI2503000075", "nama": "Sarah Ayani"}, {"nik": "CMI2505000113", "nama": "Tia Setiawati"}, {"nik": "CMI1712000002", "nama": "Djoko Sulistyono"}, {"nik": "CMI1907000011", "nama": "Jepri Yandi"}, {"nik": "CMI2504000084", "nama": "Maiko Febriano Legi"}, {"nik": "CMI2601000235", "nama": "Indra Juniarsa"}, {"nik": "CMI2504000094", "nama": "Sabari"}, {"nik": "CMI2607000360", "nama": "Hasirin"}, {"nik": "CMI2605000266", "nama": "Andi Maulana"}, {"nik": "CMI2605000263", "nama": "Afriadiansyah"}, {"nik": "CMI2605000264", "nama": "Muhaidi"}, {"nik": "CMI251000350", "nama": "Marhara S.I.P Pasaribu"}, {"nik": "CMI200300152", "nama": "Alfiansyah"}, {"nik": "CMI2505000103", "nama": "Siska Permatasari"}, {"nik": "CMI2506000117", "nama": "Fuad"}, {"nik": "CMI2508000156", "nama": "Almuhayan"}, {"nik": "CMI2605000262", "nama": "Aryan Roshandi"}, {"nik": "CMI2606000311", "nama": "Siti Kholijah Pulungan"}, {"nik": "CMI250600301", "nama": "Rizki Kurniawan"}, {"nik": "CMI250600300", "nama": "Agus Novianto"}, {"nik": "CMI260100406", "nama": "Idola Kulana"}, {"nik": "CMI2509000158", "nama": "Yustina Sari"}, {"nik": "CMI2503000076", "nama": "M. Safe'ei Udin Nur"}, {"nik": "CMI2509000157", "nama": "Hamim Tades"}, {"nik": "CMI2606000317", "nama": "Irfan Naufal Hartanto"}, {"nik": "CMI2607000345", "nama": "Muhammad Rizqi Darmawan"}, {"nik": "CMI2607000353", "nama": "Fadrian Zalmon Dinamu"}, {"nik": "CMI2507000148", "nama": "Rechal Sanuardi"}, {"nik": "CMI2511000221", "nama": "Haruni"}, {"nik": "CMI2607000330", "nama": "Harisno"}, {"nik": "CMI2607000331", "nama": "Mitahul Aripin"}, {"nik": "CMI2607000332", "nama": "Jasmin"}, {"nik": "CMI100500039", "nama": "Teguh Hadi Pribawanto"}, {"nik": "CMI250500292", "nama": "Ikhsan Ega Novanto"}, {"nik": "CMI2504000098", "nama": "Kiki Widya Nengsi"}, {"nik": "CMI2607000329", "nama": "Vira Annisa"}, {"nik": "CMI1906000010", "nama": "Kardi Sopyan"}, {"nik": "CMI1801000004", "nama": "Didik Irawan"}, {"nik": "CMI2503000077", "nama": "Kambulanus Aceng"}, {"nik": "CMI2503000078", "nama": "Handoko"}, {"nik": "CMI2504000097", "nama": "Ega"}, {"nik": "CMI2506000124", "nama": "Regi Triansyah"}, {"nik": "CMI2605000253", "nama": "Handi"}, {"nik": "CMI2605000254", "nama": "Dismas Hervin"}, {"nik": "CMI2606000314", "nama": "Herda Ardinata"}, {"nik": "CMI2503000082", "nama": "Syahroni"}, {"nik": "CMI2503000083", "nama": "Gio Era Putra"}, {"nik": "CMI2505000110", "nama": "Caril Dwi Hergino"}, {"nik": "CMI2601000232", "nama": "Riky Juniar Nainggolan"}, {"nik": "CMI190200114", "nama": "Agus Supriyanto"}, {"nik": "CMI250800329", "nama": "Febryan Aldo Overstiano Rahardjo"}, {"nik": "CMI250900332", "nama": "Bobby Hendrick Christian"}, {"nik": "CMI260700540", "nama": "Rahman Ali"}, {"nik": "CMI250900337", "nama": "Rosid Witandra"}, {"nik": "CMI260741555", "nama": "Trihadi Abdulrachman"}, {"nik": "CMI250900334", "nama": "Benyamin Masu"}, {"nik": "CMI250900331", "nama": "Wahyu Risky Nugroho"}, {"nik": "CMI2603000251", "nama": "Nurhalisa Dewi Suryani"}, {"nik": "CMI2507000143", "nama": "Muhammad Ramadhani"}, {"nik": "CMI2508000154", "nama": "Muhammad Virgio"}, {"nik": "CMI2507000144", "nama": "Teguh Suratman"}, {"nik": "CMI2603000248", "nama": "Riky Aydul Putra"}, {"nik": "CMI2507000145", "nama": "Wisnu Sanjaya Berlin"}, {"nik": "CMI2507000146", "nama": "Wahyu Setio Atmaja"}, {"nik": "CMI2607000352", "nama": "Tomi Mardianto"}, {"nik": "CMI2606000296", "nama": "Eko Titis Purwanto"}, {"nik": "CMI2601000233", "nama": "Lat Ruki"}, {"nik": "CMI2601000234", "nama": "Waldi"}, {"nik": "CMI2606000309", "nama": "Rodiansyah"}, {"nik": "CMI2606000310", "nama": "Yogi Saputra"}, {"nik": "CMI050800003", "nama": "Sugeng Prihadi"}, {"nik": "CMI250900343", "nama": "Mohammad Rochim"}, {"nik": "CMI1903000008", "nama": "Imam Hidayat"}, {"nik": "CMI2110000037", "nama": "Gandung Agus Pranoto"}, {"nik": "CMI2506000122", "nama": "Teguh Subekti"}, {"nik": "CMI2509000159", "nama": "Iyansyah"}, {"nik": "CMI2509000161", "nama": "Rivan Irawan"}, {"nik": "CMI2602000244", "nama": "Ananda Rizqi Trihandoyo"}, {"nik": "CMI2607000338", "nama": "Hermawan Susanto"}, {"nik": "CMI2509000162", "nama": "Mah Mudi"}, {"nik": "CMI2606000289", "nama": "Muhammad Nuryadin"}, {"nik": "CMI2606000313", "nama": "Agus Purwanto"}, {"nik": "CMI2606000312", "nama": "Muhammad Agus"}, {"nik": "CMI2607000341", "nama": "Wandi Setiawan"}, {"nik": "CMI2606000305", "nama": "Iswawantio"}, {"nik": "CMI2606000306", "nama": "Rizali Qoirul Huda"}, {"nik": "CMI2606000307", "nama": "Erwin Sunarno"}, {"nik": "CMI2606000320", "nama": "Sarmadi (B)"}, {"nik": "CMI2606000321", "nama": "Heri Suprianto"}, {"nik": "CMI2606000288", "nama": "Ardianto"}, {"nik": "CMI2606000290", "nama": "Budi Setiawijaya"}, {"nik": "CMI2606000293", "nama": "Dery Saputra"}, {"nik": "CMI2606000302", "nama": "Afindo A'raaf"}, {"nik": "CMI2607000337", "nama": "Rodi Murianto"}, {"nik": "CMI2607000340", "nama": "Nazwa Pradipta"}, {"nik": "CMI200700155", "nama": "Surya Hadi Puspita"}, {"nik": "001", "nama": "Prayudha Hendro Prajoko, ST"}, {"nik": "CMI251200449", "nama": "Anton Agus Santoso"}, {"nik": "002", "nama": "Fathur Rahman,ST"}, {"nik": "CMI250800323", "nama": "Tri Angga Sakti"}, {"nik": "CMI260600543", "nama": "Yoga Wishnu Pradana"}, {"nik": "CMI250541531", "nama": "Silvian Kurniawan"}, {"nik": "CMI2504000089", "nama": "Egi Virgiawan"}, {"nik": "CMI2506000121", "nama": "Gusti Jumain Dinata"}, {"nik": "CMI2601000239", "nama": "Bonifasius Petrus Omri"}, {"nik": "CMI2606000322", "nama": "Ade Setiawan"}, {"nik": "CMI2512000226", "nama": "Jasmin"}, {"nik": "CMI2601000237", "nama": "Purnama Tibas"}, {"nik": "CMI2606000285", "nama": "Febri Mikola"}, {"nik": "CMI2606000319", "nama": "Albertus H Bayu"}, {"nik": "CMI2607000334", "nama": "Rufus Lui"}, {"nik": "CMI2607000355", "nama": "Aryo Eka Armandha"}, {"nik": "CMI250800319", "nama": "Dwi Kurniawanto"}, {"nik": "003", "nama": "Rudi Irawan"}, {"nik": "CMI250800318", "nama": "Leonardo Defredo Dwi Parant Kusuma"}, {"nik": "CMI250900335", "nama": "Vian Rosyadi Nugraha"}, {"nik": "CMI260600549", "nama": "Safrudin Susilo Wardi"}, {"nik": "CMI250741532", "nama": "Yafet Rumengan"}, {"nik": "CMI120500049", "nama": "Muhammad Mustafid"}, {"nik": "CMI2504000090", "nama": "Rajidi"}, {"nik": "CMI2511000217", "nama": "Gabriel Aldani"}, {"nik": "CMI2503000079", "nama": "Rivaldi Mahendra"}, {"nik": "CMI2506000123", "nama": "Tolha Soimam"}, {"nik": "CMI2507000126", "nama": "Azis Maulana"}, {"nik": "CMI2607000336", "nama": "Rizwan Septiawan"}, {"nik": "CMI2507000128", "nama": "Alek"}, {"nik": "CMI2601000236", "nama": "Basilius Angas Rere"}, {"nik": "CMI2503000080", "nama": "Suhman Nurdianto"}, {"nik": "CMI2503000081", "nama": "Muhammad Abdul Rasyid"}, {"nik": "CMI2507000125", "nama": "Rio"}, {"nik": "CMI2507000127", "nama": "Mahwika Aris Susilo"}, {"nik": "CMI2511000222", "nama": "Rizky Fernanda"}, {"nik": "CMI2603000249", "nama": "Gia Saputra"}, {"nik": "CMI2603000250", "nama": "RD Agus. M. Jubras"}, {"nik": "CMI2606000286", "nama": "Deni Arianto"}, {"nik": "CMI2606000287", "nama": "Rahmad Ersandi"}, {"nik": "CMI2606000316", "nama": "Jati Galih Prasetyo"}, {"nik": "CMI2511000223", "nama": "Sandro"}, {"nik": "CMI2606000294", "nama": "Raihan Fathurrahman"}, {"nik": "CMI2607000359", "nama": "Jumadi"}, {"nik": "CMI2607000351", "nama": "Teguh Triadi"}, {"nik": "CMI2606000273", "nama": "Aan Saputra"}, {"nik": "CMI2606000274", "nama": "Sandi Firmansyah"}, {"nik": "CMI2606000275", "nama": "Arjuna (A)"}, {"nik": "CMI2606000297", "nama": "Dewa Para Duta"}, {"nik": "CMI2606000276", "nama": "Nugi Subastian"}, {"nik": "CMI2606000277", "nama": "Ranudin"}, {"nik": "CMI2606000299", "nama": "Sumarno"}, {"nik": "CMI2606000300", "nama": "Suwandi"}, {"nik": "CMI2606000278", "nama": "Uu Salam Rabbani"}, {"nik": "CMI2606000279", "nama": "Riki Saputra"}, {"nik": "CMI2606000280", "nama": "Arjuna (B)"}, {"nik": "CMI2606000291", "nama": "Herman"}, {"nik": "CMI2606000292", "nama": "Dapin"}, {"nik": "CMI2606000304", "nama": "Dedi Hermanto"}, {"nik": "CMI2606000326", "nama": "Sandri"}, {"nik": "CMI2607000333", "nama": "Eko Prianto"}, {"nik": "CMI2606000281", "nama": "Hendrianus Pirma"}, {"nik": "CMI2606000282", "nama": "Eko Firmansyah"}, {"nik": "CMI2606000298", "nama": "Cecep Suhendar"}, {"nik": "CMI2607000327", "nama": "Siwandi"}, {"nik": "CMI1811000005", "nama": "Suparman"}, {"nik": "CMI1811000006", "nama": "Eko Prastyo"}, {"nik": "CMI200900158", "nama": "Santi Dwi Cahyati"}, {"nik": "CMI2501000068", "nama": "Antonius Rizky Noviandi"}, {"nik": "CMI2505000111", "nama": "Muhamad Syarif Fajrin"}, {"nik": "CMI250700314", "nama": "Sadaukur Ginting"}, {"nik": "CMI250600302", "nama": "Mohammad Siswo"}, {"nik": "CMI250700308", "nama": "M. Jumadi"}, {"nik": "CMI251200370", "nama": "Hamesh J.R. Effenson"}, {"nik": "CMI250900344", "nama": "M. Rasmi Sawaludin"}, {"nik": "CMI260300455", "nama": "M. Shafa Marwah"}, {"nik": "CMI180400084", "nama": "Setiyo Cahyono"}, {"nik": "CMI2607000328", "nama": "Wahyu Angga Purnama"}, {"nik": "CMI2607000344", "nama": "Wahyu Ramadhany Bryan Wicaksi"}, {"nik": "CMI2606000308", "nama": "Destia Rahmarani"}, {"nik": "CMI2505000104", "nama": "Jeki"}, {"nik": "CMI2505000105", "nama": "Yuandi"}, {"nik": "CMI2603000245", "nama": "Rudi Hartono"}, {"nik": "CMI2510000210", "nama": "Ego"}, {"nik": "CMI2512000231", "nama": "Albertus Ivan Cardoba"}, {"nik": "CMI2511000218", "nama": "Shafarudin"}, {"nik": "CMI2603000247", "nama": "Teodorikus Junior"}, {"nik": "CMI2603000246", "nama": "Deni Ari Wananda"}, {"nik": "CMI2606000318", "nama": "Try Khususianto"}, {"nik": "CMI2511000219", "nama": "Robi Apriandi"}, {"nik": "CMI2606000269", "nama": "Edi Junaidi"}, {"nik": "CMI2606000270", "nama": "Harun Suharman"}, {"nik": "CMI2606000271", "nama": "Jainal Aripin"}, {"nik": "CMI2606000272", "nama": "Juwana Yadi"}, {"nik": "CMI2606000324", "nama": "Dian Saputra"}, {"nik": "CMI2606000325", "nama": "Riski Supiandi"}, {"nik": "CMI2607000354", "nama": "Juil Samahendra"}, {"nik": "CMI2606000315", "nama": "Saefudin"}, {"nik": "CMI061000011", "nama": "Guntur Rahma Pratama"}, {"nik": "CMI161000056", "nama": "Suratman"}, {"nik": "CMI171200075", "nama": "Ahmad Sofian"}, {"nik": "CMI2504000091", "nama": "Heru Baman"}, {"nik": "CMI2504000099", "nama": "Agus Apriadi"}, {"nik": "CMI2511000220", "nama": "Riyan Fitra Kurniawan"}, {"nik": "CMI2606000303", "nama": "Mutia Shamila"}, {"nik": "CMI2607000339", "nama": "Aby Jilan Jaudani"}, {"nik": "CMI2504000092", "nama": "Riano"}, {"nik": "CMI2606000301", "nama": "M. Ridho"}, {"nik": "CMI2607000357", "nama": "Ramli Hajerani"}, {"nik": "CMI2607000358", "nama": "Bram Hadi Pramono"}, {"nik": "CMI191200148", "nama": "Drs.Sumarno"}, {"nik": "CMI220200181", "nama": "Wawan, S. Hut"}, {"nik": "CMI210500170", "nama": "Tri Wibowo, S.sos"}, {"nik": "CMI180200079", "nama": "Dewi Tri Wulandari"}, {"nik": "CMI2504000085", "nama": "Gitty Charunnisa"}, {"nik": "CMI1912000013", "nama": "Hary Sugeng Rahardjo"}, {"nik": "CMI2605000260", "nama": "Rahadiansyah"}, {"nik": "CMI2412000067", "nama": "Aan Ajibi Sarmiyanto"}, {"nik": "CMI2602000243", "nama": "Marsiano Aquito Sianipar"}, {"nik": "CMI2309000052", "nama": "Angga"}];
+
+function normalizeNik(s){ return (s||'').trim().toUpperCase().replace(/\s+/g,''); }
+function normalizeName(s){
+  return (s||'').toLowerCase().split(',')[0].replace(/[^a-z\s']/g,'').replace(/\s+/g,' ').trim();
+}
+
+function checkAlreadyLoggedIn(){
+  try{
+    const raw = localStorage.getItem('kta_auth');
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+function applyLoggedInUser(user){
+  $('loginOverlay').style.display = 'none';
+  $('loggedInAs').textContent = user.nama + ' · ' + user.nik;
+  const dibuatOlehField = $('f_dibuatoleh');
+  if(dibuatOlehField){
+    dibuatOlehField.value = user.nama;
+    dibuatOlehField.readOnly = true;
+  }
+  if(typeof goHome === 'function') goHome();
+}
+
+function attemptLogin(){
+  const nikRaw = $('loginNik').value;
+  const namaRaw = $('loginNama').value;
+  const nik = normalizeNik(nikRaw);
+  const namaNorm = normalizeName(namaRaw);
+  const errEl = $('loginError');
+
+  if(!nik || !namaRaw.trim()){
+    errEl.textContent = 'NIK dan Nama wajib diisi.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const found = EMPLOYEES.find(e => normalizeNik(e.nik) === nik);
+  if(!found){
+    errEl.textContent = 'NIK tidak ditemukan di data karyawan PT CMI.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(normalizeName(found.nama) !== namaNorm){
+    errEl.textContent = 'Nama tidak sesuai dengan data untuk NIK tersebut. Periksa kembali ejaan nama.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  const user = { nik: found.nik, nama: found.nama };
+  localStorage.setItem('kta_auth', JSON.stringify(user));
+  applyLoggedInUser(user);
+}
+
+$('loginBtn').addEventListener('click', attemptLogin);
+$('loginNama').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') attemptLogin(); });
+
+$('logoutBtn').addEventListener('click', ()=>{
+  if(!confirm('Ganti pengguna? Anda perlu login ulang dengan NIK & Nama.')) return;
+  localStorage.removeItem('kta_auth');
+  location.reload();
+});
+
+(function initAuth(){
+  const SESSION_TIMEOUT_MS = 3 * 60 * 1000; // 3 menit
+
+  function markHidden(){
+    localStorage.setItem('kta_last_hidden', Date.now().toString());
+  }
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden') markHidden();
+  });
+  window.addEventListener('pagehide', markHidden);
+  window.addEventListener('beforeunload', markHidden);
+
+  const existing = checkAlreadyLoggedIn();
+  const lastHidden = parseInt(localStorage.getItem('kta_last_hidden') || '0', 10);
+  const now = Date.now();
+  const expired = lastHidden && (now - lastHidden) > SESSION_TIMEOUT_MS;
+
+  if(existing && expired){
+    // Aplikasi ditutup lebih dari 3 menit -> wajib login ulang
+    localStorage.removeItem('kta_auth');
+    localStorage.removeItem('kta_last_hidden');
+    // loginOverlay tetap tampil (default), tidak perlu aksi tambahan
+  } else if(existing){
+    applyLoggedInUser(existing);
+    localStorage.removeItem('kta_last_hidden');
+  }
+})();
+
+let selectedRisk = null;
+let selectedPics = [];
+let editingId = null;
+let entries = [];
+let currentPhotoDataUrl = null;
+let photoExplicitlyRemoved = false;
+
+function compressImage(file, maxWidth, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxWidth / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showPhotoPreview(dataUrl){
+  currentPhotoDataUrl = dataUrl;
+  photoExplicitlyRemoved = false;
+  $('photoPreview').src = dataUrl;
+  $('photoPreviewWrap').style.display = 'inline-block';
+}
+function clearPhotoPreview(silent){
+  currentPhotoDataUrl = null;
+  photoExplicitlyRemoved = !silent;
+  $('f_foto').value = '';
+  $('photoPreviewWrap').style.display = 'none';
+  $('photoPreview').src = '';
+}
+
+$('f_foto').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showToast('Memproses foto...');
+  try{
+    const compressed = await compressImage(file, 900, 0.6);
+    showPhotoPreview(compressed);
+  }catch(err){
+    showToast('Gagal memproses foto.');
+  }
+});
+$('removePhotoBtn').addEventListener('click', clearPhotoPreview);
+
+// ====== CITA BLAST ======
+const BLAST_COLLECTION = 'cita_blast_posts';
+
+// ====== TELEGRAM (CITA Blast auto-post ke channel) ======
+// Ganti dua nilai ini setelah Bot & Channel Telegram selesai dibuat.
+const TELEGRAM_BOT_TOKEN = '8983229444:AAEzKGVxTpHNKaYtWdpA9kX1zMq9VdmZstU';
+const TELEGRAM_CHANNEL_ID = '@CitaBlast_HSESandai';
+
+function isTelegramConfigured(){
+  return TELEGRAM_BOT_TOKEN && !TELEGRAM_BOT_TOKEN.startsWith('GANTI_') &&
+         TELEGRAM_CHANNEL_ID && !TELEGRAM_CHANNEL_ID.startsWith('GANTI_');
+}
+
+function truncate(str, max){
+  if(!str) return '';
+  return str.length > max ? str.slice(0, max - 1) + '…' : str;
+}
+
+async function sendToTelegram(post){
+  if(!isTelegramConfigured()){
+    return { ok: false, description: 'Telegram belum dikonfigurasi.' };
+  }
+  const caption = truncate(
+    `📢 ${post.judul}\n\n${post.caption || ''}\n\n— ${post.kategori} · KTA-TTA Site Sandai`,
+    1000
+  );
+
+  try{
+    if(post.foto){
+      const resp = await fetch(post.foto);
+      const blob = await resp.blob();
+      const formData = new FormData();
+      formData.append('chat_id', TELEGRAM_CHANNEL_ID);
+      formData.append('caption', caption);
+      formData.append('photo', blob, 'poster.jpg');
+      const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+      });
+      return await tgRes.json();
+    } else {
+      const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHANNEL_ID, text: caption })
+      });
+      return await tgRes.json();
+    }
+  }catch(err){
+    console.error('Gagal kirim ke Telegram:', err);
+    return { ok: false, description: String(err) };
+  }
+}
+let blastPosts = [];
+let blCurrentPhotoDataUrl = null;
+
+$('bl_foto').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showToast('Memproses gambar...');
+  try{
+    const compressed = await compressImage(file, 1000, 0.65);
+    blCurrentPhotoDataUrl = compressed;
+    $('blPhotoPreview').src = compressed;
+    $('blPhotoPreviewWrap').style.display = 'inline-block';
+  }catch(err){
+    showToast('Gagal memproses gambar.');
+  }
+});
+$('blRemovePhotoBtn').addEventListener('click', ()=>{
+  blCurrentPhotoDataUrl = null;
+  $('bl_foto').value = '';
+  $('blPhotoPreviewWrap').style.display = 'none';
+  $('blPhotoPreview').src = '';
+});
+
+function resetBlastForm(){
+  $('bl_judul').value = '';
+  $('bl_caption').value = '';
+  $('bl_kategori').value = 'Poster';
+  blCurrentPhotoDataUrl = null;
+  $('bl_foto').value = '';
+  $('blPhotoPreviewWrap').style.display = 'none';
+  $('blPhotoPreview').src = '';
+}
+
+$('blSubmitBtn').addEventListener('click', async ()=>{
+  const judul = $('bl_judul').value.trim();
+  const caption = $('bl_caption').value.trim();
+  if(!judul || (!caption && !blCurrentPhotoDataUrl)){
+    showToast('Isi minimal Judul, dan Caption atau Gambar.');
+    return;
+  }
+  const authInfo = checkAlreadyLoggedIn();
+  const data = {
+    judul,
+    kategori: $('bl_kategori').value,
+    caption,
+    foto: blCurrentPhotoDataUrl,
+    dibuatOleh: authInfo ? authInfo.nama : 'Tidak diketahui',
+    createdAt: Date.now()
+  };
+  $('blSubmitBtn').disabled = true;
+  try{
+    await db.collection(BLAST_COLLECTION).add(data);
+    showToast('Poster berhasil dipublikasikan.');
+    resetBlastForm();
+    document.querySelector('#blastTabs .tab[data-bview="feed"]').click();
+
+    if(isTelegramConfigured()){
+      sendToTelegram(data).then(tgResult=>{
+        if(tgResult && tgResult.ok){
+          showToast('Terkirim otomatis ke Telegram Channel ✅');
+        } else {
+          console.warn('Telegram gagal:', tgResult);
+          showToast('Poster tersimpan, tapi gagal kirim ke Telegram.');
+        }
+      });
+    }
+  }catch(err){
+    console.error(err);
+    showToast('Gagal publikasikan — cek koneksi internet.');
+  }
+  $('blSubmitBtn').disabled = false;
+});
+
+db.collection(BLAST_COLLECTION).onSnapshot(
+  (snapshot) => {
+    blastPosts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if(document.querySelector('#blastTabs .tab[data-bview="feed"]').classList.contains('active')) renderBlastFeed();
+  },
+  (error) => console.error(error)
+);
+
+function renderBlastFeed(){
+  const list = $('blastFeedList');
+  if(blastPosts.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="big">📣</div>Belum ada poster/pengumuman.<br>Buat yang pertama di tab "Buat Baru".</div>`;
+    return;
+  }
+  const sorted = [...blastPosts].sort((a,b)=>b.createdAt-a.createdAt);
+  list.innerHTML = sorted.map(p=>{
+    const dateStr = new Date(p.createdAt).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    return `
+    <div class="blast-post">
+      <span class="blast-post-tag">${p.kategori}</span>
+      <div class="blast-post-title">${p.judul}</div>
+      ${p.foto ? `<img src="${p.foto}" alt="Poster">` : ''}
+      ${p.caption ? `<div class="blast-post-caption">${p.caption}</div>` : ''}
+      <div class="blast-post-meta">Oleh ${p.dibuatOleh} — ${dateStr}</div>
+      <div class="blast-post-actions">
+        <button class="blast-share-btn" onclick="shareBlastPost('${p.id}')">Bagikan</button>
+        <button class="blast-share-btn" style="background:#229ED9;" onclick="resendBlastToTelegram('${p.id}')">Kirim ke Telegram</button>
+        <button class="blast-del-btn" onclick="deleteBlastPost('${p.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function shareBlastPost(id){
+  const post = blastPosts.find(p=>p.id===id);
+  if(!post) return;
+  const shareText = `*${post.judul}*\n\n${post.caption || ''}\n\n— KTA-TTA Site Sandai / CITA Blast`;
+
+  try{
+    if(post.foto && navigator.canShare){
+      const resp = await fetch(post.foto);
+      const blob = await resp.blob();
+      const file = new File([blob], 'poster.jpg', { type: blob.type });
+      if(navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], text: shareText, title: post.judul });
+        return;
+      }
+    }
+    if(navigator.share){
+      await navigator.share({ text: shareText, title: post.judul });
+      return;
+    }
+  }catch(err){
+    if(err.name === 'AbortError') return; // user cancelled share sheet
+    console.warn('Share gagal, fallback ke WhatsApp link:', err);
+  }
+  // Fallback: buka wa.me dengan teks saja (tanpa lampiran otomatis)
+  window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+  if(post.foto) showToast('Foto tidak bisa ikut otomatis — silakan unduh & lampirkan manual.');
+}
+
+async function resendBlastToTelegram(id){
+  const post = blastPosts.find(p=>p.id===id);
+  if(!post) return;
+  if(!isTelegramConfigured()){
+    showToast('Telegram belum dikonfigurasi di aplikasi ini.');
+    return;
+  }
+  showToast('Mengirim ke Telegram...');
+  const result = await sendToTelegram(post);
+  if(result && result.ok){
+    showToast('Terkirim ke Telegram Channel ✅');
+  } else {
+    console.warn('Telegram gagal:', result);
+    showToast('Gagal kirim ke Telegram: ' + (result.description || 'unknown error'));
+  }
+}
+
+async function deleteBlastPost(id){
+  if(!confirm('Hapus poster/pengumuman ini?')) return;
+  try{
+    await db.collection(BLAST_COLLECTION).doc(id).delete();
+  }catch(err){ showToast('Gagal menghapus.'); }
+}
+
+// ====== SPEEDGUN ======
+const SG_COLLECTION = 'speedgun_records';
+const SG_SPEED_LIMIT = 60;
+const SG_TOLERANCE = 5;
+const SG_LOKASI_OPTIONS = ["Jl Mining","KM 18","KM 03 Mining","Simpang 3 WP 3-4","KM 45","KM 53","Jalan Barging","KM 56","KM 02 Mining"];
+const SG_PERUSAHAAN_OPTIONS = ["JUS","WWPI","SIE","HWA","PIK","WPK","MAT","Lainnya"];
+
+let sgRecords = [];
+let sgEditingId = null;
+let sgChartInstances = {};
+
+populateDatalist2($('sgLokasiList'), SG_LOKASI_OPTIONS);
+populateSelect2($('sg_perusahaan'), SG_PERUSAHAAN_OPTIONS, "— Pilih Perusahaan —");
+$('sgLimitText').textContent = SG_SPEED_LIMIT;
+$('sgToleranceText').textContent = SG_TOLERANCE;
+
+function populateDatalist2(el, arr){ el.innerHTML = arr.map(v=>`<option value="${v}"></option>`).join(''); }
+function populateSelect2(el, arr, placeholder){
+  el.innerHTML = `<option value="">${placeholder}</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+
+function computeSgStatus(speed){
+  if(speed > SG_SPEED_LIMIT + SG_TOLERANCE) return 'PELANGGARAN';
+  if(speed > SG_SPEED_LIMIT) return 'WASPADA';
+  return 'NORMAL';
+}
+function sgStatusColor(status){
+  return status === 'PELANGGARAN' ? 'var(--extreme)' : status === 'WASPADA' ? 'var(--mod)' : 'var(--low)';
+}
+function sgStatusBg(status){
+  return status === 'PELANGGARAN' ? '#FBE4E4' : status === 'WASPADA' ? '#FBEFD4' : '#DDF0E3';
+}
+
+function renderSgStamp(){
+  const wrap = $('sgStampWrap');
+  const speedVal = parseFloat($('sg_kecepatan').value);
+  if(isNaN(speedVal)){
+    wrap.innerHTML = `<div class="stamp-empty">Isi kecepatan untuk melihat status</div>`;
+    return;
+  }
+  const status = computeSgStatus(speedVal);
+  wrap.innerHTML = `<div class="stamp" style="background:${sgStatusBg(status)};color:${sgStatusColor(status)};">
+    <div class="lvl">${speedVal} Km/h</div><div class="txt">${status}</div>
+  </div>`;
+}
+$('sg_kecepatan').addEventListener('input', renderSgStamp);
+
+function resetSgForm(){
+  $('sg_tanggal').value = '';
+  $('sg_jam').value = '';
+  $('sg_lokasi').value = '';
+  $('sg_unit').value = '';
+  $('sg_perusahaan').value = '';
+  $('sg_arah').value = 'K';
+  $('sg_kecepatan').value = '';
+  $('sg_catatan').value = '';
+  renderSgStamp();
+  sgEditingId = null;
+  $('sgSubmitBtn').textContent = 'Simpan Data';
+  $('sgCancelEditBtn').style.display = 'none';
+  const authInfo = checkAlreadyLoggedIn();
+  $('sg_pelaksana').value = authInfo ? authInfo.nama : '';
+}
+
+$('sgSubmitBtn').addEventListener('click', async ()=>{
+  const tanggal = $('sg_tanggal').value;
+  const lokasi = $('sg_lokasi').value.trim();
+  const unit = $('sg_unit').value.trim();
+  const speedRaw = $('sg_kecepatan').value;
+  const pelaksana = $('sg_pelaksana').value.trim();
+
+  if(!tanggal || !lokasi || !unit || speedRaw === '' || !pelaksana){
+    showToast('Lengkapi minimal: Tanggal, Lokasi, No. Unit, Kecepatan, dan Pelaksana.');
+    return;
+  }
+  const kecepatan = parseFloat(speedRaw);
+  const status = computeSgStatus(kecepatan);
+  const existing = sgEditingId ? sgRecords.find(r=>r.id===sgEditingId) : null;
+
+  const data = {
+    tanggal,
+    jam: $('sg_jam').value,
+    lokasi,
+    unit,
+    perusahaan: $('sg_perusahaan').value,
+    arah: $('sg_arah').value,
+    kecepatan,
+    status,
+    catatan: $('sg_catatan').value.trim(),
+    pelaksana,
+    createdAt: existing ? existing.createdAt : Date.now()
+  };
+
+  $('sgSubmitBtn').disabled = true;
+  try{
+    if(sgEditingId){
+      await db.collection(SG_COLLECTION).doc(sgEditingId).set(data);
+      showToast('Data berhasil diperbarui.');
+    } else {
+      await db.collection(SG_COLLECTION).add(data);
+      showToast('Data tersimpan.');
+    }
+    resetSgForm();
+  }catch(err){
+    console.error(err);
+    showToast('Gagal menyimpan — cek koneksi internet.');
+  }
+  $('sgSubmitBtn').disabled = false;
+});
+
+$('sgCancelEditBtn').addEventListener('click', resetSgForm);
+
+db.collection(SG_COLLECTION).onSnapshot(
+  (snapshot) => {
+    sgRecords = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if(document.querySelector('#sgTabs .tab[data-sgview="riwayat"]').classList.contains('active')) renderSgTickets();
+    if(document.querySelector('#sgTabs .tab[data-sgview="dashboard"]').classList.contains('active')) renderSgDashboard();
+  },
+  (error) => console.error(error)
+);
+
+function renderSgTickets(){
+  const list = $('sgTicketList');
+  if(sgRecords.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="big">🚨</div>Belum ada data pengukuran.<br>Isi form di tab "Input Baru".</div>`;
+    return;
+  }
+  const sorted = [...sgRecords].sort((a,b)=>b.createdAt-a.createdAt);
+  list.innerHTML = sorted.map(r=>{
+    const badgeClass = r.status === 'PELANGGARAN' ? 'open' : r.status === 'WASPADA' ? 'open' : 'close';
+    return `
+    <div class="ticket" style="border-left-color:${sgStatusColor(r.status)};">
+      <div class="ticket-top">
+        <span class="ticket-no">${r.tanggal || '-'} ${r.jam || ''} · ${r.arah || '-'}</span>
+        <span class="ticket-status" style="background:${sgStatusBg(r.status)};color:${sgStatusColor(r.status)};">${r.status}</span>
+      </div>
+      <div class="ticket-loc">${r.unit} ${r.perusahaan ? '('+r.perusahaan+')' : ''} — ${r.kecepatan} Km/h</div>
+      <div class="ticket-txt">Lokasi: ${r.lokasi}${r.catatan ? ' · '+r.catatan : ''}</div>
+      <div class="ticket-meta">
+        <span>Pelaksana: ${r.pelaksana}</span>
+      </div>
+      <div class="ticket-actions">
+        <button onclick="editSgEntry('${r.id}')">Edit</button>
+        <button class="del" onclick="deleteSgEntry('${r.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editSgEntry(id){
+  const r = sgRecords.find(x=>x.id===id);
+  if(!r) return;
+  sgEditingId = id;
+  $('sg_tanggal').value = r.tanggal || '';
+  $('sg_jam').value = r.jam || '';
+  $('sg_lokasi').value = r.lokasi || '';
+  $('sg_unit').value = r.unit || '';
+  $('sg_perusahaan').value = r.perusahaan || '';
+  $('sg_arah').value = r.arah || 'K';
+  $('sg_kecepatan').value = r.kecepatan;
+  $('sg_catatan').value = r.catatan || '';
+  $('sg_pelaksana').value = r.pelaksana || '';
+  renderSgStamp();
+  $('sgSubmitBtn').textContent = 'Simpan Perubahan';
+  $('sgCancelEditBtn').style.display = 'block';
+  document.querySelectorAll('#sgTabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelector('#sgTabs .tab[data-sgview="input"]').classList.add('active');
+  $('view-sg-input').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteSgEntry(id){
+  if(!confirm('Hapus data pengukuran ini?')) return;
+  try{
+    await db.collection(SG_COLLECTION).doc(id).delete();
+  }catch(err){ showToast('Gagal menghapus.'); }
+}
+
+$('sgClearBtn').addEventListener('click', async ()=>{
+  if(!confirm('Kosongkan SEMUA data SpeedGun? Pastikan sudah export ke Excel sebelum melakukan ini.')) return;
+  const batch = db.batch();
+  sgRecords.forEach(r => batch.delete(db.collection(SG_COLLECTION).doc(r.id)));
+  try{
+    await batch.commit();
+    showToast('Semua data dikosongkan.');
+  }catch(err){ showToast('Gagal mengosongkan data.'); }
+});
+
+function sgDestroyChart(id){
+  if(sgChartInstances[id]){ sgChartInstances[id].destroy(); delete sgChartInstances[id]; }
+}
+
+function renderSgDashboard(){
+  if(typeof Chart === 'undefined') return;
+  const total = sgRecords.length;
+  const speeds = sgRecords.map(r=>r.kecepatan).filter(v=>typeof v === 'number');
+  const avg = speeds.length ? (speeds.reduce((a,b)=>a+b,0)/speeds.length) : 0;
+  const max = speeds.length ? Math.max(...speeds) : 0;
+  const violationCount = sgRecords.filter(r=>r.status==='PELANGGARAN').length;
+  const waspadaCount = sgRecords.filter(r=>r.status==='WASPADA').length;
+  const normalCount = sgRecords.filter(r=>r.status==='NORMAL').length;
+  const compliance = total > 0 ? Math.round((normalCount/total)*100) : 0;
+
+  $('sgStatTotal').textContent = total;
+  $('sgStatAvg').textContent = avg.toFixed(1);
+  $('sgStatMax').textContent = max;
+  $('sgStatViolation').textContent = violationCount;
+  $('sgStatCompliance').textContent = compliance + '%';
+  $('sgStatComplianceBar').style.width = compliance + '%';
+
+  sgDestroyChart('status');
+  sgChartInstances.status = new Chart($('sgChartStatus'), {
+    type: 'bar',
+    data: {
+      labels: ['Normal','Waspada','Pelanggaran'],
+      datasets: [{ data: [normalCount, waspadaCount, violationCount], backgroundColor: ['#178A4C','#C58A05','#C0272B'], borderRadius: 6 }]
+    },
+    options: baseChartOpts(false)
+  });
+
+  const lokasiAgg = {};
+  sgRecords.forEach(r=>{
+    if(!lokasiAgg[r.lokasi]) lokasiAgg[r.lokasi] = [];
+    lokasiAgg[r.lokasi].push(r.kecepatan);
+  });
+  const lokasiTop = Object.entries(lokasiAgg)
+    .map(([k,v])=>[k, v.reduce((a,b)=>a+b,0)/v.length])
+    .sort((a,b)=>b[1]-a[1]).slice(0,8);
+  sgDestroyChart('lokasi');
+  sgChartInstances.lokasi = new Chart($('sgChartLokasi'), {
+    type: 'bar',
+    data: { labels: lokasiTop.map(x=>x[0]), datasets: [{ data: lokasiTop.map(x=>Math.round(x[1]*10)/10), backgroundColor: '#0B1E33', borderRadius: 6 }] },
+    options: baseChartOpts(true)
+  });
+
+  const perusahaanAgg = {};
+  sgRecords.forEach(r=>{
+    const p = r.perusahaan || 'Tidak diketahui';
+    if(!perusahaanAgg[p]) perusahaanAgg[p] = [];
+    perusahaanAgg[p].push(r.kecepatan);
+  });
+  const perusahaanTop = Object.entries(perusahaanAgg)
+    .map(([k,v])=>[k, v.reduce((a,b)=>a+b,0)/v.length])
+    .sort((a,b)=>b[1]-a[1]).slice(0,8);
+  sgDestroyChart('perusahaan');
+  sgChartInstances.perusahaan = new Chart($('sgChartPerusahaan'), {
+    type: 'bar',
+    data: { labels: perusahaanTop.map(x=>x[0]), datasets: [{ data: perusahaanTop.map(x=>Math.round(x[1]*10)/10), backgroundColor: '#EA6A24', borderRadius: 6 }] },
+    options: baseChartOpts(true)
+  });
+
+  const hariAgg = {};
+  sgRecords.forEach(r=>{
+    if(!r.tanggal) return;
+    hariAgg[r.tanggal] = (hariAgg[r.tanggal] || 0) + 1;
+  });
+  const hariSorted = Object.entries(hariAgg).sort((a,b)=> a[0] < b[0] ? -1 : 1);
+  sgDestroyChart('tren');
+  sgChartInstances.tren = new Chart($('sgChartTren'), {
+    type: 'bar',
+    data: { labels: hariSorted.map(x=>x[0]), datasets: [{ data: hariSorted.map(x=>x[1]), backgroundColor: '#15304D', borderRadius: 6 }] },
+    options: baseChartOpts(false)
+  });
+
+  const top10 = [...sgRecords].sort((a,b)=>b.kecepatan-a.kecepatan).slice(0,10);
+  $('sgTop10List').innerHTML = top10.length === 0 ? '<div class="empty-state">Belum ada data.</div>' : top10.map((r,i)=>`
+    <div class="ticket" style="border-left-color:${sgStatusColor(r.status)};padding:10px 12px;">
+      <div class="ticket-top">
+        <span class="ticket-no">#${i+1} · ${r.unit} (${r.perusahaan||'-'})</span>
+        <span class="ticket-status" style="background:${sgStatusBg(r.status)};color:${sgStatusColor(r.status)};">${r.kecepatan} Km/h</span>
+      </div>
+      <div class="ticket-meta"><span>${r.lokasi} · ${r.tanggal || '-'}</span></div>
+    </div>
+  `).join('');
+}
+
+$('sgExportBtn').addEventListener('click', async ()=>{
+  if(sgRecords.length===0){ showToast('Belum ada data untuk di-export.'); return; }
+  showToast('Menyiapkan file Excel...');
+  const sorted = [...sgRecords].sort((a,b)=>{
+    if(a.tanggal !== b.tanggal) return (a.tanggal||'').localeCompare(b.tanggal||'');
+    return (a.jam||'').localeCompare(b.jam||'');
+  });
+  const dateStr = new Date().toISOString().slice(0,10);
+  const wb = new ExcelJS.Workbook();
+
+  const hariNames = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
+  function hariFromTanggal(tgl){
+    if(!tgl) return '';
+    const d = new Date(tgl+'T00:00:00');
+    return hariNames[d.getDay()];
+  }
+  function bulanFromTanggal(tgl){
+    if(!tgl) return '';
+    const d = new Date(tgl+'T00:00:00');
+    const bulanNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    return bulanNames[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  // ===== SHEET 1: DATA MENTAH =====
+  const wsData = wb.addWorksheet('Data Mentah');
+  const headers = ['No','Tanggal','Hari','Lokasi','Pelaksana Inspeksi','Sarana (No. Unit)','Perusahaan','Kecepatan (Km/h)','Arah','Jam','Status Kecepatan','Catatan','Bulan'];
+  wsData.addRow(headers);
+  wsData.getRow(1).font = { bold: true };
+  wsData.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  sorted.forEach((r,i)=>{
+    wsData.addRow([
+      i+1, r.tanggal, hariFromTanggal(r.tanggal), r.lokasi, r.pelaksana, r.unit, r.perusahaan,
+      r.kecepatan, r.arah, r.jam, r.status, r.catatan, bulanFromTanggal(r.tanggal)
+    ]);
+  });
+  wsData.columns = [{width:4},{width:12},{width:10},{width:18},{width:20},{width:14},{width:12},{width:14},{width:8},{width:10},{width:14},{width:30},{width:14}];
+  wsData.eachRow(row=> row.alignment = { horizontal:'center', vertical: 'middle', wrapText: true });
+
+  // ===== SHEET 2: ANALISA =====
+  const wsA = wb.addWorksheet('Analisa');
+  const bold = { bold: true };
+  let ar = 1;
+  wsA.getCell(ar,1).value = 'ANALISA DATA INSPEKSI KECEPATAN KENDARAAN'; wsA.getCell(ar,1).font = { bold: true, size: 13 }; ar+=2;
+
+  const total = sorted.length;
+  const speeds = sorted.map(r=>r.kecepatan);
+  const avg = speeds.length ? speeds.reduce((a,b)=>a+b,0)/speeds.length : 0;
+  const max = speeds.length ? Math.max(...speeds) : 0;
+  const min = speeds.length ? Math.min(...speeds) : 0;
+  const normalCount = sorted.filter(r=>r.status==='NORMAL').length;
+  const waspadaCount = sorted.filter(r=>r.status==='WASPADA').length;
+  const violationCount = sorted.filter(r=>r.status==='PELANGGARAN').length;
+  const compliance = total ? (normalCount/total*100) : 0;
+  const hariUnik = new Set(sorted.map(r=>r.tanggal)).size;
+  const lokasiUnik = new Set(sorted.map(r=>r.lokasi)).size;
+
+  wsA.getCell(ar,1).value = '1. RINGKASAN UMUM'; wsA.getCell(ar,1).font = bold; ar++;
+  const summaryRows = [
+    ['Total Data Pengukuran', total],
+    ['Jumlah Hari Inspeksi', hariUnik],
+    ['Jumlah Lokasi Inspeksi', lokasiUnik],
+    ['Kecepatan Rata-Rata (Km/h)', Math.round(avg*10)/10],
+    ['Kecepatan Maksimum (Km/h)', max],
+    ['Kecepatan Minimum (Km/h)', min],
+    ['Jumlah NORMAL', normalCount],
+    ['Jumlah WASPADA', waspadaCount],
+    ['Jumlah PELANGGARAN', violationCount],
+    ['Persentase Kepatuhan (%)', Math.round(compliance*10)/10],
+  ];
+  summaryRows.forEach(([label,val])=>{ wsA.getCell(ar,1).value = label; wsA.getCell(ar,2).value = val; ar++; });
+  ar += 1;
+
+  function aggBy(keyFn){
+    const map = {};
+    sorted.forEach(r=>{
+      const k = keyFn(r) || 'Tidak diketahui';
+      if(!map[k]) map[k] = [];
+      map[k].push(r);
+    });
+    return map;
+  }
+  function aggRow(items){
+    const sp = items.map(r=>r.kecepatan);
+    const a = sp.length ? sp.reduce((x,y)=>x+y,0)/sp.length : 0;
+    const mx = sp.length ? Math.max(...sp) : 0;
+    const wc = items.filter(r=>r.status==='WASPADA').length;
+    const vc = items.filter(r=>r.status==='PELANGGARAN').length;
+    const over = items.length ? Math.round(((wc+vc)/items.length*100)*10)/10 : 0;
+    return [items.length, Math.round(a*10)/10, mx, wc, vc, over];
+  }
+
+  wsA.getCell(ar,1).value = '2. REKAP PER LOKASI'; wsA.getCell(ar,1).font = bold; ar++;
+  ['Lokasi','Jumlah Data','Kec. Rata-Rata','Kec. Maksimum','Jumlah Waspada','Jumlah Pelanggaran','% Over Speed'].forEach((h,i)=>{ wsA.getCell(ar,i+1).value = h; wsA.getCell(ar,i+1).font = bold; }); ar++;
+  const lokasiAgg = aggBy(r=>r.lokasi);
+  Object.entries(lokasiAgg).forEach(([lok, items])=>{
+    wsA.getCell(ar,1).value = lok;
+    aggRow(items).forEach((v,i)=>{ wsA.getCell(ar,i+2).value = v; });
+    ar++;
+  });
+  ar += 1;
+
+  wsA.getCell(ar,1).value = '3. REKAP PER PERUSAHAAN'; wsA.getCell(ar,1).font = bold; ar++;
+  ['Perusahaan','Jumlah Data','Kec. Rata-Rata','Kec. Maksimum','Jumlah Waspada','Jumlah Pelanggaran','% Over Speed'].forEach((h,i)=>{ wsA.getCell(ar,i+1).value = h; wsA.getCell(ar,i+1).font = bold; }); ar++;
+  const perusahaanAgg = aggBy(r=>r.perusahaan);
+  Object.entries(perusahaanAgg).forEach(([p, items])=>{
+    wsA.getCell(ar,1).value = p;
+    aggRow(items).forEach((v,i)=>{ wsA.getCell(ar,i+2).value = v; });
+    ar++;
+  });
+  ar += 1;
+
+  wsA.getCell(ar,1).value = '4. REKAP PER HARI'; wsA.getCell(ar,1).font = bold; ar++;
+  ['Tanggal','Hari','Jumlah Data','Kec. Rata-Rata','Kec. Maksimum','Jumlah Pelanggaran'].forEach((h,i)=>{ wsA.getCell(ar,i+1).value = h; wsA.getCell(ar,i+1).font = bold; }); ar++;
+  const hariAggMap = aggBy(r=>r.tanggal);
+  Object.entries(hariAggMap).sort((a,b)=> a[0] < b[0] ? -1 : 1).forEach(([tgl, items])=>{
+    const row = aggRow(items);
+    wsA.getCell(ar,1).value = tgl;
+    wsA.getCell(ar,2).value = hariFromTanggal(tgl);
+    wsA.getCell(ar,3).value = row[0];
+    wsA.getCell(ar,4).value = row[1];
+    wsA.getCell(ar,5).value = row[2];
+    wsA.getCell(ar,6).value = row[4];
+    ar++;
+  });
+  ar += 1;
+
+  wsA.getCell(ar,1).value = '5. TOP 10 KECEPATAN TERTINGGI'; wsA.getCell(ar,1).font = bold; ar++;
+  ['Peringkat','Sarana','Perusahaan','Lokasi','Tanggal','Kecepatan (Km/h)','Status'].forEach((h,i)=>{ wsA.getCell(ar,i+1).value = h; wsA.getCell(ar,i+1).font = bold; }); ar++;
+  const top10 = [...sorted].sort((a,b)=>b.kecepatan-a.kecepatan).slice(0,10);
+  top10.forEach((r,i)=>{
+    wsA.getCell(ar,1).value = i+1;
+    wsA.getCell(ar,2).value = r.unit;
+    wsA.getCell(ar,3).value = r.perusahaan;
+    wsA.getCell(ar,4).value = r.lokasi;
+    wsA.getCell(ar,5).value = r.tanggal;
+    wsA.getCell(ar,6).value = r.kecepatan;
+    const statusCell = wsA.getCell(ar,7);
+    statusCell.value = r.status;
+    if(r.status === 'PELANGGARAN') statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFF0000'} };
+    else if(r.status === 'WASPADA') statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFC000'} };
+    ar++;
+  });
+  wsA.columns = [{width:20},{width:14},{width:14},{width:16},{width:16},{width:14},{width:14}];
+
+  try{
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SpeedGun_Inspeksi_${dateStr}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('File Excel berhasil diunduh.');
+  }catch(err){
+    console.error(err);
+    showToast('Gagal membuat file Excel.');
+  }
+});
+
+function $(id){return document.getElementById(id);}
+function populateDatalist(el, arr){ el.innerHTML = arr.map(v=>`<option value="${v}"></option>`).join(''); }
+function populateSelect(el, arr, placeholder){
+  el.innerHTML = `<option value="">${placeholder}</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+populateDatalist($('areaList'), AREA_OPTIONS);
+populateDatalist($('lokasiList'), LOKASI_OPTIONS);
+function renderPicChips(){
+  const wrap = $('picChipWrap');
+  wrap.innerHTML = PIC_OPTIONS.map(p=>`<div class="pic-chip" data-pic="${p}"><span class="dot"></span>${p}</div>`).join('');
+  wrap.querySelectorAll('.pic-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const p = chip.dataset.pic;
+      const idx = selectedPics.indexOf(p);
+      if(idx === -1){ selectedPics.push(p); chip.classList.add('on'); }
+      else { selectedPics.splice(idx,1); chip.classList.remove('on'); }
+    });
+  });
+}
+renderPicChips();
+populateSelect($('f_kategori'), KATEGORI_OPTIONS, "— Pilih Kategori —");
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function goHome(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('view-home').classList.add('active');
+  $('ktattaTabs').style.display = 'none';
+  $('blastTabs').style.display = 'none';
+  $('sgTabs').style.display = 'none';
+  $('counterBadge').style.display = 'none';
+  $('brandTitleText').textContent = 'KTA-TTA SITE SANDAI';
+  $('brandSubtitle').textContent = 'PICA Field Report';
+}
+
+function openKtaTtaModule(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('#ktattaTabs .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
+  $('view-input').classList.add('active');
+  $('ktattaTabs').style.display = 'flex';
+  $('blastTabs').style.display = 'none';
+  $('sgTabs').style.display = 'none';
+  $('counterBadge').style.display = '';
+  $('brandTitleText').textContent = 'KTA-TTA SITE SANDAI';
+  $('brandSubtitle').textContent = 'PICA Field Report';
+}
+
+function openBlastModule(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('#blastTabs .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
+  $('view-blast-compose').classList.add('active');
+  $('blastTabs').style.display = 'flex';
+  $('ktattaTabs').style.display = 'none';
+  $('sgTabs').style.display = 'none';
+  $('counterBadge').style.display = 'none';
+  $('brandTitleText').textContent = 'CITA BLAST';
+  $('brandSubtitle').textContent = 'Poster & Pengumuman';
+  renderBlastFeed();
+}
+
+function openSpeedgunModule(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('#sgTabs .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
+  $('view-sg-input').classList.add('active');
+  $('sgTabs').style.display = 'flex';
+  $('ktattaTabs').style.display = 'none';
+  $('blastTabs').style.display = 'none';
+  $('counterBadge').style.display = 'none';
+  $('brandTitleText').textContent = 'SPEEDGUN';
+  $('brandSubtitle').textContent = 'Inspeksi Kecepatan Kendaraan';
+}
+
+$('homeBtn').addEventListener('click', goHome);
+$('openKtaTta').addEventListener('click', openKtaTtaModule);
+$('openBlast').addEventListener('click', openBlastModule);
+$('openSpeedgun').addEventListener('click', openSpeedgunModule);
+
+document.querySelectorAll('#ktattaTabs .tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#ktattaTabs .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    $('view-'+tab.dataset.view).classList.add('active');
+    if(tab.dataset.view === 'riwayat') renderTickets();
+    if(tab.dataset.view === 'dashboard') renderDashboard();
+  });
+});
+
+document.querySelectorAll('#blastTabs .tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#blastTabs .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    $('view-blast-'+tab.dataset.bview).classList.add('active');
+    if(tab.dataset.bview === 'feed') renderBlastFeed();
+  });
+});
+
+document.querySelectorAll('#sgTabs .tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#sgTabs .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    $('view-sg-'+tab.dataset.sgview).classList.add('active');
+    if(tab.dataset.sgview === 'riwayat') renderSgTickets();
+    if(tab.dataset.sgview === 'dashboard') renderSgDashboard();
+  });
+});
+
+document.querySelectorAll('.risk-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.risk-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    selectedRisk = btn.dataset.r;
+    renderStamp();
+  });
+});
+
+function renderStamp(){
+  const wrap = $('stampWrap');
+  if(!selectedRisk){
+    wrap.innerHTML = `<div class="stamp-empty">Pilih tingkat keparahan<br>untuk melihat stempel klasifikasi</div>`;
+    return;
+  }
+  const cls = selectedRisk.toLowerCase();
+  const meta = RISK_META[selectedRisk];
+  wrap.innerHTML = `<div class="stamp ${cls}"><div class="lvl">${selectedRisk}</div><div class="txt">${meta.tingkat}</div></div>`;
+}
+
+function resetForm(){
+  ['f_tanggal','f_area','f_lokasi','f_temuan','f_potensi','f_tindakan','f_duedate'].forEach(id=>$(id).value='');
+  $('f_kategori').value='';
+  selectedPics = [];
+  document.querySelectorAll('.pic-chip').forEach(c=>c.classList.remove('on'));
+  selectedRisk = null;
+  document.querySelectorAll('.risk-btn').forEach(b=>b.classList.remove('on'));
+  renderStamp();
+  clearPhotoPreview(true);
+  editingId = null;
+  $('submitBtn').textContent = 'Simpan Temuan';
+  $('cancelEditBtn').style.display = 'none';
+}
+
+function saveDibuatOleh(name){
+  localStorage.setItem('pica_last_author', name);
+}
+
+// Realtime listener — keeps `entries` in sync across every phone using this app
+db.collection(COLLECTION).onSnapshot(
+  { includeMetadataChanges: true },
+  (snapshot) => {
+    entries = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateCounter();
+    if(document.querySelector('.tab[data-view="riwayat"]').classList.contains('active')) renderTickets();
+    if(document.querySelector('.tab[data-view="dashboard"]').classList.contains('active')) renderDashboard();
+    setConnStatus(snapshot.metadata.fromCache ? 'offline' : 'online');
+  },
+  (error) => {
+    console.error(error);
+    setConnStatus('error');
+  }
+);
+
+window.addEventListener('online', ()=> setConnStatus('online'));
+window.addEventListener('offline', ()=> setConnStatus('offline'));
+
+function setConnStatus(state){
+  const el = $('connStatus');
+  if(state === 'online'){
+    el.textContent = 'Terhubung — data tersinkron';
+    el.className = 'conn-status ok';
+    setTimeout(()=>{ el.style.display = 'none'; }, 2000);
+  } else if(state === 'offline'){
+    el.textContent = 'Mode offline — input tetap tersimpan, akan sinkron otomatis saat online';
+    el.className = 'conn-status offline';
+    el.style.display = 'block';
+  } else {
+    el.textContent = 'Gagal terhubung — cek koneksi internet / konfigurasi Firebase';
+    el.className = 'conn-status err';
+    el.style.display = 'block';
+  }
+}
+
+function updateCounter(){
+  const open = entries.filter(e=>e.status==='Open').length;
+  $('countNum').textContent = entries.length;
+  $('countLabel').textContent = `Tersimpan (${open} Open)`;
+}
+
+$('submitBtn').addEventListener('click', async ()=>{
+  const lokasi = $('f_lokasi').value.trim();
+  const temuan = $('f_temuan').value.trim();
+  const dibuatOleh = $('f_dibuatoleh').value.trim();
+
+  if(!lokasi || !temuan || !selectedRisk || !dibuatOleh){
+    showToast('Lengkapi minimal: Lokasi, Temuan, Tingkat Keparahan, dan Nama Pembuat.');
+    return;
+  }
+
+  const meta = RISK_META[selectedRisk];
+  const existing = editingId ? entries.find(e=>e.id===editingId) : null;
+  const data = {
+    tanggalPelaksanaan: $('f_tanggal').value,
+    area: $('f_area').value.trim(),
+    lokasi: lokasi,
+    temuan: temuan,
+    potensiRisiko: $('f_potensi').value.trim(),
+    tindakan: $('f_tindakan').value.trim(),
+    pic: [...selectedPics],
+    dueDate: $('f_duedate').value,
+    status: existing ? existing.status : 'Open',
+    kategoriRisiko: $('f_kategori').value,
+    dibuatOleh: dibuatOleh,
+    kategoriAABC: selectedRisk,
+    tingkatRisiko: meta.tingkat,
+    rentangSkor: meta.rentang,
+    foto: photoExplicitlyRemoved ? null : (currentPhotoDataUrl !== null ? currentPhotoDataUrl : (existing ? (existing.foto || null) : null)),
+    createdAt: existing ? existing.createdAt : Date.now()
+  };
+
+  $('submitBtn').disabled = true;
+  try{
+    if(editingId){
+      await db.collection(COLLECTION).doc(editingId).set(data);
+      showToast('Temuan berhasil diperbarui.');
+    } else {
+      await db.collection(COLLECTION).add(data);
+      showToast('Temuan tersimpan.');
+    }
+    saveDibuatOleh(dibuatOleh);
+    if(data.pic && data.pic.length > 0){
+      openWaModal(data);
+    }
+    resetForm();
+  }catch(e){
+    console.error(e);
+    showToast('Gagal menyimpan — cek koneksi internet.');
+  }
+  $('submitBtn').disabled = false;
+});
+
+$('cancelEditBtn').addEventListener('click', resetForm);
+
+function picText(pic){ return Array.isArray(pic) ? pic.join(', ') : (pic || ''); }
+
+function loadImageSize(dataUrl){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=> resolve({ w: img.naturalWidth || 200, h: img.naturalHeight || 200 });
+    img.onerror = ()=> resolve({ w: 200, h: 200 });
+    img.src = dataUrl;
+  });
+}
+
+function toWaNumber(local){
+  let n = local.trim().replace(/[^0-9]/g,'');
+  if(n.startsWith('0')) n = '62' + n.slice(1);
+  else if(!n.startsWith('62')) n = '62' + n;
+  return n;
+}
+
+function buildWaMessage(entry){
+  const lines = [
+    '*TEMUAN PICA — KTA-TTA SITE SANDAI*',
+    '',
+    '📍 Lokasi: ' + (entry.lokasi || '-') + (entry.area ? ' (' + entry.area + ')' : ''),
+    '⚠️ Temuan: ' + (entry.temuan || '-'),
+    entry.potensiRisiko ? '🔺 Potensi Risiko: ' + entry.potensiRisiko : null,
+    '✅ Tindakan: ' + (entry.tindakan || '-'),
+    '📅 Due Date: ' + (entry.dueDate || '-'),
+    '🏷️ Kategori: ' + (entry.kategoriAABC || '-') + ' — ' + (entry.tingkatRisiko || '-'),
+    '👤 Dilaporkan oleh: ' + (entry.dibuatOleh || '-'),
+    entry.foto ? '📷 Foto terlampir (unduh & lampirkan manual di WhatsApp)' : null,
+    '',
+    'Mohon segera ditindaklanjuti. Terima kasih.'
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+function openWaModal(entry){
+  const pics = Array.isArray(entry.pic) ? entry.pic : (entry.pic ? [entry.pic] : []);
+  if(pics.length === 0){ showToast('Tidak ada PIC yang dipilih untuk temuan ini.'); return; }
+  const message = encodeURIComponent(buildWaMessage(entry));
+  const groups = $('waGroups');
+
+  let photoBtnHtml = '';
+  if(entry.foto){
+    photoBtnHtml = `<button type="button" class="wa-photo-btn" id="waDownloadPhotoBtn">📷 Unduh Foto Temuan (lampirkan manual di WhatsApp)</button>`;
+  }
+
+  groups.innerHTML = photoBtnHtml + pics.map(pic=>{
+    const contacts = PIC_WA[pic] || [];
+    const picGroups = PIC_GROUPS[pic] || [];
+
+    let groupBtnsHtml = '';
+    if(picGroups.length > 0){
+      groupBtnsHtml = picGroups.map((g, gi)=>`<button type="button" class="wa-group-btn" data-pic="${pic}" data-gidx="${gi}">📋 Salin Pesan & Buka ${g.name}</button>`).join('');
+    }
+
+    if(contacts.length === 0 && picGroups.length === 0){
+      return `<div class="wa-group"><div class="wa-group-label">${pic}</div><div style="font-size:12px;color:var(--ink-soft);">Nomor/grup WA belum terdaftar untuk PIC ini.</div></div>`;
+    }
+    const btns = contacts.map(c=>{
+      const waNum = toWaNumber(c.num);
+      return `<a class="wa-btn" href="https://wa.me/${waNum}?text=${message}" target="_blank" rel="noopener">
+        <span>${c.name} <span style="opacity:0.7;">(${pic})</span></span><span class="num">${c.num}</span>
+      </a>`;
+    }).join('');
+    return `<div class="wa-group"><div class="wa-group-label">${pic}</div>${groupBtnsHtml}${btns}</div>`;
+  }).join('');
+
+  document.querySelectorAll('.wa-group-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const pic = btn.dataset.pic;
+      const gidx = parseInt(btn.dataset.gidx, 10);
+      const group = (PIC_GROUPS[pic] || [])[gidx];
+      if(!group) return;
+      const plainMessage = buildWaMessage(entry);
+      try{
+        await navigator.clipboard.writeText(plainMessage);
+        showToast('Pesan disalin. Tempel (paste) di grup lalu kirim.');
+      }catch(err){
+        showToast('Gagal menyalin otomatis — salin pesan secara manual.');
+      }
+      window.open(group.link, '_blank');
+    });
+  });
+
+  if(entry.foto){
+    $('waDownloadPhotoBtn').addEventListener('click', ()=>{
+      const a = document.createElement('a');
+      a.href = entry.foto;
+      a.download = `foto_temuan_${(entry.lokasi||'temuan').replace(/[^a-z0-9]+/gi,'_')}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
+
+  $('waModal').classList.add('show');
+}
+
+$('waCloseBtn').addEventListener('click', ()=> $('waModal').classList.remove('show'));
+
+function daysRemaining(dueDate){
+  if(!dueDate) return null;
+  const due = new Date(dueDate+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((due - today)/(1000*60*60*24));
+}
+function statusTenggat(entry){
+  if(entry.status === 'Close') return 'SELESAI';
+  const d = daysRemaining(entry.dueDate);
+  if(d===null) return '-';
+  if(d < 0) return 'TERLAMBAT';
+  if(d <= 3) return 'SEGERA JATUH TEMPO';
+  return 'DALAM PROSES';
+}
+
+function renderTickets(){
+  const list = $('ticketList');
+  if(entries.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="big">📋</div>Belum ada temuan tersimpan.<br>Isi form di tab "Input Baru".</div>`;
+    return;
+  }
+  const sorted = [...entries].sort((a,b)=>b.createdAt-a.createdAt);
+  list.innerHTML = sorted.map(e=>{
+    const sisa = daysRemaining(e.dueDate);
+    const sisaTxt = sisa===null ? '-' : (sisa+' hari');
+    return `
+    <div class="ticket" data-r="${e.kategoriAABC}">
+      <div class="ticket-top">
+        <span class="ticket-no">${e.tanggalPelaksanaan || 'Tanpa tanggal'} · ${e.kategoriAABC}</span>
+        <span class="ticket-status ${e.status.toLowerCase()}">${e.status}</span>
+      </div>
+      <div class="ticket-loc">${e.lokasi}${e.area ? ' — '+e.area : ''}</div>
+      <div class="ticket-txt">${e.temuan}</div>
+      ${e.foto ? `<img class="ticket-photo" src="${e.foto}" alt="Foto temuan">` : ''}
+      <div class="ticket-meta">
+        <span>PIC: ${Array.isArray(e.pic) ? (e.pic.join(', ') || '-') : (e.pic || '-')}</span>
+        <span>Sisa: ${sisaTxt} (${statusTenggat(e)})</span>
+      </div>
+      <div class="ticket-meta">
+        <span>Oleh: ${e.dibuatOleh}</span>
+        <span>Due: ${e.dueDate || '-'}</span>
+      </div>
+      <div class="ticket-actions">
+        <button onclick="sendWaForEntry('${e.id}')">Kirim WA</button>
+        <button onclick="toggleStatus('${e.id}')">${e.status==='Open' ? 'Tandai Close' : 'Tandai Open'}</button>
+        <button onclick="editEntry('${e.id}')">Edit</button>
+        <button class="del" onclick="deleteEntry('${e.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function sendWaForEntry(id){
+  const entry = entries.find(x=>x.id===id);
+  if(!entry){ showToast('Data temuan tidak ditemukan.'); return; }
+  openWaModal(entry);
+}
+
+async function toggleStatus(id){
+  const e = entries.find(x=>x.id===id);
+  if(!e) return;
+  try{
+    await db.collection(COLLECTION).doc(id).update({status: e.status==='Open'?'Close':'Open'});
+  }catch(err){ showToast('Gagal update status.'); }
+}
+
+function editEntry(id){
+  const e = entries.find(x=>x.id===id);
+  if(!e) return;
+  editingId = id;
+  $('f_tanggal').value = e.tanggalPelaksanaan || '';
+  $('f_area').value = e.area;
+  $('f_lokasi').value = e.lokasi;
+  $('f_temuan').value = e.temuan;
+  $('f_potensi').value = e.potensiRisiko;
+  $('f_tindakan').value = e.tindakan;
+  selectedPics = Array.isArray(e.pic) ? [...e.pic] : (e.pic ? [e.pic] : []);
+  document.querySelectorAll('.pic-chip').forEach(c=>c.classList.toggle('on', selectedPics.includes(c.dataset.pic)));
+  $('f_duedate').value = e.dueDate;
+  $('f_kategori').value = e.kategoriRisiko;
+  $('f_dibuatoleh').value = e.dibuatOleh;
+  selectedRisk = e.kategoriAABC;
+  document.querySelectorAll('.risk-btn').forEach(b=>b.classList.toggle('on', b.dataset.r===selectedRisk));
+  renderStamp();
+  if(e.foto){ showPhotoPreview(e.foto); } else { clearPhotoPreview(true); }
+  $('submitBtn').textContent = 'Simpan Perubahan';
+  $('cancelEditBtn').style.display = 'block';
+  document.querySelectorAll('#ktattaTabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelector('#ktattaTabs .tab[data-view="input"]').classList.add('active');
+  $('view-input').classList.add('active');
+  $('ktattaTabs').style.display = 'flex';
+  $('blastTabs').style.display = 'none';
+  $('counterBadge').style.display = '';
+  $('brandTitleText').textContent = 'KTA-TTA SITE SANDAI';
+  $('brandSubtitle').textContent = 'PICA Field Report';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteEntry(id){
+  if(!confirm('Hapus temuan ini? Tindakan tidak dapat dibatalkan.')) return;
+  try{
+    await db.collection(COLLECTION).doc(id).delete();
+  }catch(err){ showToast('Gagal menghapus.'); }
+}
+
+$('clearBtn').addEventListener('click', async ()=>{
+  if(!confirm('Kosongkan SEMUA data temuan yang tersimpan bersama? Pastikan sudah export ke Excel sebelum melakukan ini.')) return;
+  const batch = db.batch();
+  entries.forEach(e => batch.delete(db.collection(COLLECTION).doc(e.id)));
+  try{
+    await batch.commit();
+    showToast('Semua data dikosongkan.');
+  }catch(err){ showToast('Gagal mengosongkan data.'); }
+});
+
+// ====== DASHBOARD ANALISA ======
+let chartInstances = {};
+const RISK_COLORS = { AA:"#C0272B", A:"#EA6A24", B:"#C58A05", C:"#178A4C" };
+
+function destroyChart(id){
+  if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function countBy(arr, keyFn){
+  const map = {};
+  arr.forEach(item=>{
+    const k = keyFn(item) || "Tidak diketahui";
+    map[k] = (map[k]||0) + 1;
+  });
+  return map;
+}
+
+function topN(map, n){
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+
+function renderDashboard(){
+  if(typeof Chart === 'undefined') return;
+
+  const total = entries.length;
+  const open = entries.filter(e=>e.status==='Open').length;
+  const close = entries.filter(e=>e.status==='Close').length;
+  const overdue = entries.filter(e=> statusTenggat(e)==='TERLAMBAT').length;
+  const pct = total>0 ? Math.round((close/total)*100) : 0;
+
+  $('statTotal').textContent = total;
+  $('statOpen').textContent = open;
+  $('statClose').textContent = close;
+  $('statOverdue').textContent = overdue;
+  $('statPct').textContent = pct + '%';
+  $('statPctBar').style.width = pct + '%';
+
+  // Chart 1: Kategori AA/A/B/C
+  const riskCount = { AA:0, A:0, B:0, C:0 };
+  entries.forEach(e=>{ if(riskCount.hasOwnProperty(e.kategoriAABC)) riskCount[e.kategoriAABC]++; });
+  destroyChart('riskLevel');
+  chartInstances.riskLevel = new Chart($('chartRiskLevel'), {
+    type: 'bar',
+    data: {
+      labels: ['AA','A','B','C'],
+      datasets: [{
+        data: [riskCount.AA, riskCount.A, riskCount.B, riskCount.C],
+        backgroundColor: [RISK_COLORS.AA, RISK_COLORS.A, RISK_COLORS.B, RISK_COLORS.C],
+        borderRadius: 6
+      }]
+    },
+    options: baseChartOpts(false)
+  });
+
+  // Chart 2: Status Tenggat
+  const tenggatCount = { 'SELESAI':0, 'DALAM PROSES':0, 'SEGERA JATUH TEMPO':0, 'TERLAMBAT':0 };
+  entries.forEach(e=>{ const s = statusTenggat(e); if(tenggatCount.hasOwnProperty(s)) tenggatCount[s]++; });
+  destroyChart('tenggat');
+  chartInstances.tenggat = new Chart($('chartTenggat'), {
+    type: 'bar',
+    data: {
+      labels: ['Selesai','Proses','Segera Tempo','Terlambat'],
+      datasets: [{
+        data: [tenggatCount['SELESAI'], tenggatCount['DALAM PROSES'], tenggatCount['SEGERA JATUH TEMPO'], tenggatCount['TERLAMBAT']],
+        backgroundColor: ['#178A4C','#94A3B8','#C58A05','#C0272B'],
+        borderRadius: 6
+      }]
+    },
+    options: baseChartOpts(false)
+  });
+
+  // Chart 3: Top Lokasi
+  const lokasiMap = countBy(entries, e=>e.lokasi);
+  const lokasiTop = topN(lokasiMap, 8);
+  destroyChart('lokasi');
+  chartInstances.lokasi = new Chart($('chartLokasi'), {
+    type: 'bar',
+    data: {
+      labels: lokasiTop.map(x=>x[0]),
+      datasets: [{ data: lokasiTop.map(x=>x[1]), backgroundColor: '#0B1E33', borderRadius: 6 }]
+    },
+    options: baseChartOpts(true)
+  });
+
+  // Chart 4: Kategori Bahaya
+  const katMap = countBy(entries, e=>e.kategoriRisiko);
+  const katTop = topN(katMap, 9);
+  destroyChart('kategori');
+  chartInstances.kategori = new Chart($('chartKategori'), {
+    type: 'bar',
+    data: {
+      labels: katTop.map(x=>x[0]),
+      datasets: [{ data: katTop.map(x=>x[1]), backgroundColor: '#EA6A24', borderRadius: 6 }]
+    },
+    options: baseChartOpts(true)
+  });
+
+  // Chart 5: Beban per PIC
+  const picMap = {};
+  entries.forEach(e=>{
+    const pics = Array.isArray(e.pic) ? e.pic : (e.pic ? [e.pic] : []);
+    if(pics.length === 0){ picMap['Tidak diketahui'] = (picMap['Tidak diketahui']||0)+1; }
+    pics.forEach(p=>{ picMap[p] = (picMap[p]||0) + 1; });
+  });
+  const picTop = topN(picMap, 10);
+  destroyChart('pic');
+  chartInstances.pic = new Chart($('chartPic'), {
+    type: 'bar',
+    data: {
+      labels: picTop.map(x=>x[0]),
+      datasets: [{ data: picTop.map(x=>x[1]), backgroundColor: '#15304D', borderRadius: 6 }]
+    },
+    options: baseChartOpts(true)
+  });
+}
+
+function baseChartOpts(horizontal){
+  return {
+    indexAxis: horizontal ? 'y' : 'x',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { font: { family: "'Inter',sans-serif", size: 10 } }, grid: { display: !horizontal, color:'#EAEDF1' } },
+      y: { ticks: { font: { family: "'Inter',sans-serif", size: 10 } }, grid: { display: horizontal, color:'#EAEDF1' } }
+    }
+  };
+}
+
+$('exportBtn').addEventListener('click', async ()=>{
+  if(entries.length===0){ showToast('Belum ada data untuk di-export.'); return; }
+  showToast('Menyiapkan file Excel...');
+  const sorted = [...entries].sort((a,b)=>a.createdAt-b.createdAt);
+  const dateStr = new Date().toISOString().slice(0,10);
+
+  const wb = new ExcelJS.Workbook();
+
+  // ===== SHEET 1: DATA TEMUAN (flat, untuk diolah/pivot) =====
+  const wsData = wb.addWorksheet('Data Temuan');
+  const dataHeaders = ['No','Tanggal Pelaksanaan','Area Inspeksi','Lokasi','Temuan / Keterangan','Potensi Risiko','Tindakan Perbaikan','PIC','Due Date','Status','Kategori Risiko','Dibuat Oleh (Safety Patrol)','Sisa Hari','Status Tenggat','Kategori (AA/A/B/C)','Tingkat Risiko','Rentang Skor','Ada Foto','Sumber File'];
+  wsData.addRow(dataHeaders);
+  wsData.getRow(1).font = { bold: true };
+  wsData.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  sorted.forEach((e,i)=>{
+    wsData.addRow([
+      i+1, e.tanggalPelaksanaan, e.area, e.lokasi, e.temuan, e.potensiRisiko, e.tindakan,
+      picText(e.pic), e.dueDate, e.status, e.kategoriRisiko, e.dibuatOleh, daysRemaining(e.dueDate),
+      statusTenggat(e), e.kategoriAABC, e.tingkatRisiko, e.rentangSkor,
+      e.foto ? 'Ya (lihat aplikasi)' : 'Tidak',
+      'Input Mobile App (' + new Date(e.createdAt).toLocaleDateString('id-ID') + ')'
+    ]);
+  });
+  wsData.columns = [{width:4},{width:16},{width:20},{width:16},{width:40},{width:32},{width:32},{width:16},{width:12},{width:8},{width:22},{width:20},{width:9},{width:16},{width:10},{width:10},{width:10},{width:14},{width:26}];
+  wsData.eachRow(row=> row.alignment = { ...(row.alignment||{}), wrapText: true, vertical: 'top' });
+
+  // ===== SHEET 2: FORMAT PICA (replikasi format laporan lapangan resmi) =====
+  const wsPica = wb.addWorksheet('Format PICA');
+  const THICK = { style: 'thick' };
+  const thickBorder = { top: THICK, left: THICK, right: THICK, bottom: THICK };
+
+  wsPica.mergeCells('B1:M2');
+  const titleCell = wsPica.getCell('B1');
+  titleCell.value = 'PROBLEM IDENTIFICATION & CORRECTIVE ACTION\nPT. CITA MINERAL INVESTINDO Tbk - SITE SANDAI\nINSPEKSI';
+  titleCell.font = { name: 'Times New Roman', size: 18, bold: true };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  wsPica.getRow(1).height = 22;
+  wsPica.getRow(2).height = 22;
+
+  wsPica.mergeCells('C3:D3');
+  const subCell = wsPica.getCell('C3');
+  subCell.value = 'Rekap Mobile App — ' + new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  subCell.font = { name: 'Times New Roman', size: 11, bold: true };
+  subCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+  wsPica.getRow(3).height = 20.25;
+
+  const picaHeaders = ['No','Tanggal Pelaksanaan','Lokasi','Foto Before','Keterangan','Potensi resiko','Tindakan Perbaikan','PIC','Due Date','Foto After','Status','Catatan'];
+  const headerRow = wsPica.getRow(4);
+  picaHeaders.forEach((h, idx)=>{
+    const cell = headerRow.getCell(idx+2); // start at column B
+    cell.value = h;
+    cell.font = { name: 'Times New Roman', size: 16, bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = thickBorder;
+  });
+  headerRow.height = 41.25;
+
+  for (let i = 0; i < sorted.length; i++){
+    const e = sorted[i];
+    const r = 5 + i;
+    const rowVals = [
+      i+1, e.tanggalPelaksanaan, e.lokasi, '', e.temuan, e.potensiRisiko,
+      e.tindakan, picText(e.pic), e.dueDate ? new Date(e.dueDate) : '', '', e.status ? e.status.toUpperCase() : '', ''
+    ];
+    rowVals.forEach((val, idx)=>{
+      const col = idx + 2; // B..M
+      const cell = wsPica.getCell(r, col);
+      cell.value = val;
+      cell.font = { name: 'Times New Roman', size: 12 };
+      cell.border = thickBorder;
+      const wrapCols = [4,6,7,8]; // Lokasi, Keterangan, Potensi resiko, Tindakan Perbaikan
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: wrapCols.includes(col) };
+      if(col === 10 && val instanceof Date){ cell.numFmt = 'd-mmm-yy'; } // Due Date
+    });
+    // Status color: Open = merah, Close = hijau
+    const statusCell = wsPica.getCell(r, 12);
+    if(e.status === 'Open'){
+      statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
+    } else if(e.status === 'Close'){
+      statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF70AD47' } };
+    }
+    wsPica.getRow(r).height = e.foto ? 130 : 60;
+
+    // Embed foto otomatis ke kolom "Foto Before" (kolom D) — mempertahankan rasio aspek
+    if(e.foto){
+      try{
+        const dims = await loadImageSize(e.foto);
+        const maxBoxPx = 150; // batas kotak agar tidak melebihi tinggi baris
+        const scale = Math.min(maxBoxPx / dims.w, maxBoxPx / dims.h, 1);
+        const imgW = dims.w * scale, imgH = dims.h * scale;
+        const base64Data = e.foto.split(',')[1];
+        const imgId = wb.addImage({ base64: base64Data, extension: 'jpeg' });
+        wsPica.addImage(imgId, {
+          tl: { col: 4.05, row: (r - 1) + 0.05 },
+          ext: { width: imgW, height: imgH }
+        });
+      }catch(err){
+        console.warn('Gagal embed foto ke Excel untuk baris', r, err);
+        wsPica.getCell(r, 5).value = 'Foto gagal dimuat';
+      }
+    }
+  }
+
+  // ===== BLOK TANDA TANGAN =====
+  const sigStartRow = 5 + sorted.length + 2; // 2 baris jarak setelah tabel
+  const sigCols = [
+    { col: 3, label: 'Dibuat oleh', name: '', title: '(Safety Patrol)' },
+    { col: 7, label: 'Diperiksa oleh', name: 'Agus Novianto', title: 'Supervisor Safety & Assessment' },
+    { col: 11, label: 'Disetujui oleh', name: 'Rizki Kurniawan', title: 'Superintendent Safety' }
+  ];
+  sigCols.forEach(sc=>{
+    // Label "Dibuat oleh / Diperiksa oleh / Disetujui oleh"
+    wsPica.mergeCells(sigStartRow, sc.col, sigStartRow, sc.col + 1);
+    const labelCell = wsPica.getCell(sigStartRow, sc.col);
+    labelCell.value = sc.label;
+    labelCell.font = { name: 'Times New Roman', size: 12 };
+    labelCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Area tanda tangan kosong
+    wsPica.mergeCells(sigStartRow + 1, sc.col, sigStartRow + 3, sc.col + 1);
+    const signArea = wsPica.getCell(sigStartRow + 1, sc.col);
+    signArea.border = { bottom: { style: 'thin' } };
+
+    // Nama
+    wsPica.mergeCells(sigStartRow + 4, sc.col, sigStartRow + 4, sc.col + 1);
+    const nameCell = wsPica.getCell(sigStartRow + 4, sc.col);
+    nameCell.value = sc.name ? `( ${sc.name} )` : '( ___________________ )';
+    nameCell.font = { name: 'Times New Roman', size: 12, bold: true, underline: false };
+    nameCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Jabatan
+    wsPica.mergeCells(sigStartRow + 5, sc.col, sigStartRow + 5, sc.col + 1);
+    const titleCell = wsPica.getCell(sigStartRow + 5, sc.col);
+    titleCell.value = sc.title;
+    titleCell.font = { name: 'Times New Roman', size: 11, italic: true };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+  for(let rr = sigStartRow; rr <= sigStartRow + 5; rr++){
+    const isSignArea = rr > sigStartRow && rr <= sigStartRow + 3;
+    wsPica.getRow(rr).height = isSignArea ? 22 : 18;
+  }
+
+  wsPica.getColumn(2).width = 5.4;   // No
+  wsPica.getColumn(3).width = 14;    // Tanggal Pelaksanaan
+  wsPica.getColumn(4).width = 13.6;  // Lokasi
+  wsPica.getColumn(5).width = 34.4;  // Foto Before
+  wsPica.getColumn(6).width = 24.9;  // Keterangan
+  wsPica.getColumn(7).width = 27.3;  // Potensi resiko
+  wsPica.getColumn(8).width = 29.9;  // Tindakan Perbaikan
+  wsPica.getColumn(9).width = 13.1;  // PIC
+  wsPica.getColumn(10).width = 15.9; // Due Date
+  wsPica.getColumn(11).width = 31.4; // Foto After
+  wsPica.getColumn(12).width = 14.1; // Status
+  wsPica.getColumn(13).width = 20.4; // Catatan
+
+  try{
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PICA_Input_Mobile_${dateStr}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('File Excel berhasil diunduh.');
+  }catch(err){
+    console.error(err);
+    showToast('Gagal membuat file Excel.');
+  }
+});
+
+updateCounter();
+
+// Daftarkan Service Worker supaya app shell (HTML/CSS/JS/ikon) tersimpan
+// dan aplikasi tetap bisa dibuka meski tidak ada koneksi internet.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err)=>{
+      console.warn('Gagal mendaftarkan Service Worker:', err);
+    });
+  });
+}
+
+</script>
+</body>
+</html>
