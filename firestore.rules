@@ -2,10 +2,60 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Hanya izinkan akses ke collection 'pica_findings' — bagian database
-    // lain (kalau nanti ada) tetap tertutup meskipun API key diketahui orang lain.
+    // ====== HELPER FUNCTIONS (khusus modul Pengajuan Mitra Kerja) ======
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isApprover() {
+      return isSignedIn() && request.auth.uid == 'wHC0uQN5J8fKzPnbloft4MWr8om2';
+    }
+    function getCompany() {
+      return request.auth.uid == 'mpOZbR5U67Wl5mWm9uf9ZbVNtkr2' ? 'JUS' :
+             request.auth.uid == 'cGx3GIV2GaPUHhFUUrc8SeRsei92' ? 'SIE' :
+             request.auth.uid == 'ADDzyGcBxFh0UvQzKW8kvh3VJWt1' ? 'PIK' :
+             request.auth.uid == '63TzAkKiZaSqlViJOf3Rj6tGhIB3' ? 'WWPI' :
+             request.auth.uid == '4Q1n7oXfiKUkxkJyDHgPN8sGbTP2' ? 'HWA' :
+             '';
+      // Catatan: PT MAT akan ditambahkan sebagai baris baru di atas setelah akunnya dibuat.
+    }
+
+    // ====== KTA-TTA (PICA Field Report) ======
     match /pica_findings/{docId} {
       allow read, write: if true;
+    }
+
+    // ====== CITA Blast — poster & pengumuman ======
+    match /cita_blast_posts/{docId} {
+      allow read, write: if true;
+    }
+
+    // ====== SpeedGun — inspeksi kecepatan kendaraan ======
+    match /speedgun_records/{docId} {
+      allow read, write: if true;
+    }
+
+    // ====== KIMPER — Berita Acara tes teori & praktek (kimper_ba) + penomoran otomatis (kimper_counter) ======
+    // Catatan: akses "hanya tim HSE" diterapkan di tampilan aplikasi (login NIK+Nama),
+    // bukan di sini. Rules ini sengaja terbuka seperti KTA-TTA & SpeedGun.
+    match /kimper_ba/{docId} {
+      allow read, write: if true;
+    }
+    match /kimper_counter/{docId} {
+      allow read, write: if true;
+    }
+
+    // ====== Daily Activity — laporan kegiatan harian tim HSE (daily_activity) ======
+    match /daily_activity/{docId} {
+      allow read, write: if true;
+    }
+
+    // ====== Pengajuan Mitra Kerja — TERISOLASI PER PERUSAHAAN ======
+    // Setiap mitra kerja HANYA bisa baca & buat pengajuan atas nama perusahaannya sendiri.
+    // Hanya akun Approver HSE yang bisa lihat semua & mengubah status (setuju/tolak).
+    match /mitra_submissions/{docId} {
+      allow read: if isApprover() || (isSignedIn() && getCompany() == resource.data.perusahaan);
+      allow create: if isSignedIn() && getCompany() == request.resource.data.perusahaan;
+      allow update, delete: if isApprover();
     }
 
     // Tutup semua collection lain secara default.
