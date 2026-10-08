@@ -3109,11 +3109,28 @@ function daRowFor(r){
 }
 async function daSync(action, rec){
   if(!DAILY_SYNC_URL) return false;
+  const body = JSON.stringify({ secret:DAILY_SYNC_SECRET, action, id:rec.id, row: action==='delete' ? null : daRowFor(rec) });
+  const opt = { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body };
   try{
-    const body = { secret:DAILY_SYNC_SECRET, action, id:rec.id, row: action==='delete' ? null : daRowFor(rec) };
-    await fetch(DAILY_SYNC_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
-    return true;
-  }catch(e){ console.error('Sync Google Sheet gagal', e); return false; }
+    // Coba baca balasan script supaya hasilnya bisa ditampilkan.
+    const res = await fetch(DAILY_SYNC_URL, opt);
+    const j = await res.json();
+    if(j && j.ok){ showToast('✓ Masuk ke Google Sheet' + (j.row ? ' (baris ' + j.row + ')' : '')); return true; }
+    showToast('Google Sheet menolak: ' + ((j && j.error) || 'tidak diketahui'));
+    console.error('Sync ditolak', j);
+    return false;
+  }catch(e1){
+    console.warn('Sync (baca balasan) gagal, coba mode no-cors', e1);
+    try{
+      await fetch(DAILY_SYNC_URL, Object.assign({ mode:'no-cors' }, opt));
+      showToast('Terkirim ke Google Sheet (hasil tidak bisa dipastikan) — cek sheet Input.');
+      return true;
+    }catch(e2){
+      console.error('Sync Google Sheet gagal', e2);
+      showToast('Gagal menghubungi Google Sheet — data tetap tersimpan di aplikasi.');
+      return false;
+    }
+  }
 }
 function daUpdateSyncInfo(){
   $('daSyncInfo').textContent = DAILY_SYNC_URL
