@@ -138,7 +138,7 @@
     letter-spacing:0.02em;text-transform:uppercase;color:var(--ink-soft);
     margin-bottom:5px;margin-top:14px;
   }
-  input[type=text],input[type=date],.kp-card input[type=number],select,textarea{
+  input[type=text],input[type=date],input[type=time],.kp-card input[type=number],select,textarea{
     width:100%;
     background:#fff;
     border:1.5px solid var(--line);
@@ -556,6 +556,10 @@
     <div class="tab active" data-kview="input">Input BA</div>
     <div class="tab" data-kview="riwayat">Riwayat BA</div>
   </div>
+  <div class="tabs" id="dailyTabs" style="display:none;">
+    <div class="tab active" data-dview="input">Input Kegiatan</div>
+    <div class="tab" data-dview="riwayat">Riwayat</div>
+  </div>
 
   <main>
     <!-- ===== HOME SCREEN ===== -->
@@ -589,6 +593,14 @@
         <div class="module-text">
           <div class="module-title">KIMPER</div>
           <div class="module-desc">Input nilai tes teori & praktek, terbitkan Berita Acara (Excel) dengan nomor otomatis. Khusus tim HSE.</div>
+        </div>
+        <div class="module-arrow">→</div>
+      </div>
+      <div class="module-card" id="openDaily" style="display:none;">
+        <div class="module-icon" style="background:#B45309;">🗓️</div>
+        <div class="module-text">
+          <div class="module-title">Daily Activity</div>
+          <div class="module-desc">Input kegiatan harian tim HSE, otomatis masuk ke Google Sheet Daily Monitoring. Khusus tim HSE.</div>
         </div>
         <div class="module-arrow">→</div>
       </div>
@@ -1034,6 +1046,48 @@
       <div class="section-label" style="margin-top:20px;">Daftar Berita Acara</div>
       <div id="kpList"></div>
     </div>
+    <div class="view" id="view-daily-input">
+      <div class="section-label">Input Kegiatan Harian Tim HSE</div>
+      <div class="kp-hint">Format sama dengan sheet "Input" di Daily Monitoring HSE. Satu entri = satu kegiatan.</div>
+      <div class="row2">
+        <div><label>Tanggal</label><input type="date" id="da_tanggal"></div>
+        <div><label>Status</label>
+          <select id="da_status"><option>Selesai</option><option>Belum Selesai</option></select>
+        </div>
+      </div>
+      <label>Nama Personil</label>
+      <select id="da_nama"></select>
+      <div class="row2">
+        <div><label>Jabatan</label><input type="text" id="da_jabatan" readonly></div>
+        <div><label>Section</label><input type="text" id="da_section" readonly></div>
+      </div>
+      <label>Kegiatan</label>
+      <select id="da_kegiatan"></select>
+      <div class="kp-hint" id="daFrekInfo"></div>
+      <div class="row2">
+        <div><label>Jam Mulai</label><input type="time" id="da_mulai"></div>
+        <div><label>Jam Selesai</label><input type="time" id="da_selesai"></div>
+      </div>
+      <label>Keterangan</label>
+      <textarea id="da_ket" placeholder="Detail pelaksanaan kegiatan..."></textarea>
+      <div class="kp-hint" id="daSyncInfo"></div>
+      <button type="button" class="submit-btn" id="daSubmitBtn" style="background:#B45309;">Simpan Kegiatan</button>
+      <button type="button" class="cancel-edit" id="daCancelEditBtn" style="display:none;">Batal Edit</button>
+    </div>
+
+    <div class="view" id="view-daily-riwayat">
+      <div class="section-label">Filter &amp; Export</div>
+      <div class="row2">
+        <div><label>Dari Tanggal</label><input type="date" id="daFrom"></div>
+        <div><label>Sampai Tanggal</label><input type="date" id="daTo"></div>
+      </div>
+      <label>Personil</label>
+      <select id="daFilterPetugas"><option value="">Semua personil</option></select>
+      <button type="button" class="export-btn" id="daExportBtn" style="margin-top:12px;width:100%;">Export ke Excel (.xlsx)</button>
+      <button type="button" class="export-btn" id="daResyncBtn" style="margin-top:8px;width:100%;display:none;">Kirim Ulang Semua ke Google Sheet</button>
+      <div class="section-label" style="margin-top:20px;">Daftar Kegiatan</div>
+      <div id="daList"></div>
+    </div>
   </main>
 
   <div class="shared-note">Data tersimpan di database bersama (Firebase) dan bisa dilihat/diisi oleh semua pengawas yang membuka link ini. Export berkala ke Excel untuk digabungkan ke dashboard master.</div>
@@ -1280,6 +1334,8 @@ function isKimperUser(){
 function kpToggleHomeCard(){
   const c = document.getElementById('openKimper');
   if(c) c.style.display = isKimperUser() ? '' : 'none';
+  const d = document.getElementById('openDaily');
+  if(d) d.style.display = (typeof isDailyUser==='function' && isDailyUser()) ? '' : 'none';
 }
 
 function applyLoggedInUser(user){
@@ -2239,7 +2295,7 @@ function mitraLogout(){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   $('view-mitra-login').classList.add('active');
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('mitra_email').value = '';
   $('mitra_password').value = '';
 }
@@ -2985,7 +3041,7 @@ function kpAttachListener(){
 function openKimperModule(){
   if(!isKimperUser()){ showToast('Menu KIMPER khusus tim HSE.'); return; }
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  ['ktattaTabs','blastTabs','sgTabs','mitraTabs'].forEach(id=>{ $(id).style.display = 'none'; });
+  ['ktattaTabs','blastTabs','sgTabs','mitraTabs','dailyTabs'].forEach(id=>{ $(id).style.display = 'none'; });
   document.querySelectorAll('#kimperTabs .tab').forEach((t,i)=>t.classList.toggle('active', i===0));
   $('view-kimper-input').classList.add('active');
   $('kimperTabs').style.display = 'flex';
@@ -3008,6 +3064,258 @@ document.querySelectorAll('#kimperTabs .tab').forEach(tab=>{
 });
 
 populateDatalist2($('kpGolonganList'), KP_GOLONGAN);
+
+// ===DAILY_START===
+// Menu Daily Activity — input kegiatan harian tim HSE, format = sheet "Input" di Daily Monitoring HSE.
+// Sinkron ke Google Sheet lewat Google Apps Script Web App (isi DAILY_SYNC_URL setelah script dipasang).
+const DAILY_COLLECTION = 'daily_activity';
+const DAILY_SYNC_URL = '';      // tempel URL Web App Apps Script di sini
+const DAILY_SYNC_SECRET = '';   // harus sama dengan SECRET di Apps Script
+// Salinan sheet "Master" (personil + daftar kegiatan per jabatan). Jika Master berubah, minta update ke Claude.
+const DA_MASTER = {"p":[["Dody Patah Kristanto","HSE Manager","HSE Dept"],["Rizki Kurniawan","Superintendent Safety & Rescue","Safety"],["Agus Novianto","Supervisor Safety Operational & Rescue","Safety"],["Adri Muhammad Taher","Supervisor Safety Operational & Rescue","Safety"],["M. Safe'ei Udin Nur","Safety Patrol","Safety"],["Hamim Tades","Safety Patrol","Safety"],["Irfan Naufal Hartanto","Safety Patrol","Safety"],["M Rizqi Darmawan","Safety Patrol","Safety"],["Fadrian Zalmon Dinamu","Safety Patrol","Safety"],["Rechal Sanuardi","Admin System","Safety"],["Haruni","Safetyman","Safety"],["Miftahul Arifin","Safetyman","Safety"],["Jasmin","Safetyman","Safety"],["Harisno","Safetyman","Safety"],["Idola Kulana","Supervisor Safety System, Development & Compliance","Safety"],["Yustina Sari","Safety System & Compliance Officer","Safety"],["Marhara S.I.P Pasaribu","Site Doctor","Health"],["Alfiansyah","Supervisor Health","Health"],["Siska Permatasari","Medic","Health"],["Fuad","Medic","Health"],["Almuhayan","Medic","Health"],["Aryan Roshandi","Medic","Health"],["Siti Kholijah Pulungan","Medic","Health"],["Aldice Sekar Arum. R","Supervisor Environment System, Development & Compliance","Environment"],["Sarah Ayani","Environment Officer","Environment"],["Rendy Boyma Tulus Panjaitan","Supervisor Environment Operational","Environment"],["Maiko Febriano Legi","Foreman Environment Operational","Environment"],["Indra Juniarsa","Foreman Environment Operational","Environment"],["Act Sabari","Foreman Environment Operational","Environment"],["Hasirin","Crew Environment","Environment"],["Muhammad Phatur Rakhman","Crew Environment","Environment"],["Fariz","Training Center & Commissioning Officer","Training Center"],["Andi Fatawari D M","Training Center & Commissioning Supervisor Ops","Training Center"],["Calvin Horas P","Superintendent Environment","Environment"]],"k":{"HSE Manager":[["P5M","Daily"],["Over Inspeksi dan Observasi","Weekly"],["Monitoring dan Evaluasi Kesiapan Alat dan Kesiapan Tim ERT","Daily"],["Monitoring dan Evaluasi Legal Compliance K3LH","Monthly"],["Sidak Kepatuhan SPDK dan Prosedur K3LH","Weekly"],["Rapat Koordinasi","Weekly"],["Monitoring dan Evaluasi Kinerja Tim","Daily"],["Monitoring dan Evaluasi KPI","Daily"],["Monitoring dan Evaluasi Ketersediaan dan Produksi Rambu","Daily"],["Monitoring dan Evaluasi Budget Safety","Weekly"],["Monitoring dan Evaluasi Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Evaluasi SPDK dan Prosedur K3LH","Daily"],["Monitoring dan Evaluasi Talent Readiness","Weekly"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan","Tentative"],["Analisa Data KTA TTA","Daily"],["Analisa Data Statistik","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Pelaksanaan Audit","Tentative"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Development SMKP dan SML","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Pengelolaan Usaha Jasa","Monthly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Progress dan evaluasi Peningkatan kompetensi aspek Operasional, K3","Weekly"],["Pembuatan dan Evaluasi Matrik Training, TNA, ATMP","Weekly"],["Pelaksanaan Evaluasi Prodactivity Unit dari Aspek Pengoperasian dan Safety untuk Internal dan Mitra","Weekly"],["Lain - Lain","Tentative"]],"Superintendent Safety & Rescue":[["P5M","Daily"],["Over Inspeksi dan Observasi","Weekly"],["Monitoring dan Evaluasi Kesiapan Alat dan Kesiapan Tim ERT","Daily"],["Monitoring dan Evaluasi Legal Compliance K3","Monthly"],["Sidak Kepatuhan SPDK dan Prosedur K3","Weekly"],["Rapat Koordinasi","Weekly"],["Monitoring dan Evaluasi Kinerja Tim","Daily"],["Monitoring dan Evaluasi KPI","Daily"],["Monitoring dan Evaluasi Ketersediaan dan Produksi Rambu","Daily"],["Monitoring dan Evaluasi Budget Safety","Weekly"],["Monitoring dan Evaluasi Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Evaluasi SPDK dan Prosedur K3","Daily"],["Monitoring dan Evaluasi Talent Readiness","Weekly"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan","Tentative"],["Analisa Data KTA TTA","Daily"],["Analisa Data Statistik","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Pelaksanaan Audit","Tentative"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Development SMKP dan SML","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Pengelolaan Usaha Jasa","Monthly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Lain - Lain","Tentative"]],"Supervisor Safety Operational & Rescue":[["P5M","Daily"],["Inspeksi dan Observasi","Daily"],["Monitoring Kesiapan Alat dan Kesiapan Tim ERT","Daily"],["Sidak Kepatuhan SPDK dan Prosedur K3","Daily"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Monitoring Ketersediaan dan Produksi Rambu","Daily"],["Pelaksanaan Investigasi Kecelakaan","Tentative"],["Pembuatan Data KTA TTA/ PICA","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Monitoring Talent Readiness","Weekly"],["Lain - Lain","Tentative"]],"Supervisor Safety System, Development & Compliance":[["P5M","Daily"],["Monitoring dan Evaluasi Legal Compliance K3","Monthly"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Monitoring Pemenuhan KPI PT CMI dan Mitra kerja","Daily"],["Monitoring Budget Safety","Weekly"],["Monitoring Pengajuan IM, MR,dll","Weekly"],["Monitoring Pelaksanaan SPDK dan Prosedur K3","Daily"],["Monitoring Pelaksanaan Investigasi Kecelakaan","Tentative"],["Analisa Data KTA TTA / PICA","Daily"],["Analisa Data Statistik","Daily"],["Reporting dan Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Membuat dan Melaksanaan program Audit","Tentative"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Development SMKP dan SML","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Reporting internal dan eksternal","Monthly"],["Pengelolaan Usaha Jasa","Weekly"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Melakukan Pra kualifikasi Calon Mitra Kerja bersama Comercil","Tentative"],["Melakukan Assessment Calon Mitra Kerja","Tentative"],["Melakukan Persiapan Presentasi PJO","Tentative"],["Melakukan Evaluasi Periodik Kinerja Mitra Kerja","Weekly"],["Melakukan Evaluasi Penerapan Kontrak Mitra Kerja","Monthly"],["Pembuatan Laporan Periodik PJP Inti dan Non Inti","Monthly"],["Melakukan monitoring KPI , Laporan dan semua yang berhungan dengan mitra kerja","Weekly"]],"Safety System & Compliance Officer":[["P5M","Daily"],["Monitoring Pemenuhan Legal Compliance K3","Monthly"],["Rapat Koordinasi","Weekly"],["Pembuatan Daily Section Untuk Monitoring Tim Safety","Daily"],["Monitoring Pemenuhan KPI PT CMI dan Mitra kerja","Daily"],["Monitoring Budget Safety","Weekly"],["Monitoring dan Pengajuan IM, MR,dll","Weekly"],["Pembuatan Safety Campaign dan Safety Alert","Weekly"],["Reporting LPI dan Rekomendasi Investigasi Kecelakaan","Tentative"],["Reporting Data KTA TTA / PICA","Daily"],["Analisa Data Statistik","Daily"],["Reporting dan Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Reporting internal dan eksternal","Monthly"],["Pengelolaan Usaha Jasa","Weekly"],["Induksi dan Persiapan APD","Daily"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Melakukan Pra kualifikasi Calon Mitra Kerja bersama Comercil","Tentative"],["Melakukan Assessment Calon Mitra Kerja","Tentative"],["Melakukan Persiapan Presentasi PJO","Tentative"],["Melakukan Evaluasi Periodik Kinerja Mitra Kerja","Weekly"],["Melakukan Evaluasi Penerapan Kontrak Mitra Kerja","Monthly"],["Pembuatan Laporan Periodik PJP Inti dan Non Inti","Monthly"],["Melakukan monitoring KPI , Laporan dan semua yang berhungan dengan mitra kerja","Weekly"],["Lain - Lain","Tentative"]],"Safety Patrol":[["P5M","Daily"],["Inspeksi dan Observasi","Daily"],["Speed Gun","Daily"],["Cek Kesiapan Alat dan Kesiapan Tim ERT","Daily"],["Sidak Kepatuhan SPDK dan Prosedur K3","Daily"],["Rapat Koordinasi","Tentative"],["Mapping kebutuhan, Pembuatan dan Pemasangan Rambu","Daily"],["Pelaksanaan Investigasi Kecelakaan","Tentative"],["Pembuatan Data KTA TTA / PICA","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Implementasi Golden Rules","Daily"],["Lain - Lain","Tentative"]],"Safetyman":[["P5M","Daily"],["Inspeksi dan Observasi","Daily"],["Speed Gun","Daily"],["Cek Kesiapan Alat dan Kesiapan Tim ERT","Daily"],["Sidak Kepatuhan SPDK dan Prosedur K3","Daily"],["Pembuatan dan Pemasangan Rambu","Daily"],["Pembuatan Data KTA TTA / PICA","Daily"],["Lain - Lain","Tentative"]],"Admin System":[["P5M","Daily"],["Pembuatan Daily Acivity","Daily"],["Induksi dan Persiapan APD","Daily"],["Reporting Pelaksanaan Program Pengawas Hebat","Daily"],["Input data inspeksi","Daily"],["Update work permit","Daily"],["Pembuatan Kimper / Mine Permit","Daily"],["Lain - Lain","Tentative"]],"Site Doctor":[["P5M","Daily"],["Over Inspeksi dan Observasi","Weekly"],["Monitoring dan Evaluasi Peralatan Kesehatan dan Tim Medis","Daily"],["Monitoring dan Evaluasi Legal Compliance Health","Monthly"],["Sidak Narkoba","Weekly"],["Rapat Koordinasi","Weekly"],["Monitoring dan Evaluasi Kinerja Tim","Daily"],["Monitoring dan Evaluasi KPI","Daily"],["Monitoring dan Evaluasi Ketersediaan Obat - Obatan","Daily"],["Monitoring dan Evaluasi Budget Health","Weekly"],["Monitoring dan Evaluasi Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Evaluasi Program IH","Weekly"],["Monitoring dan Evaluasi Talent Readiness","Weekly"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Analisa Data Kunjungan Karyawan","Daily"],["Analisa Data Statistik Kesehatan","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Development SMKP dan SML","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi MCU mitra Kerja","Daily"],["Lain - Lain","Tentative"]],"Supervisor Health":[["P5M","Daily"],["Inspeksi dan Observasi","Weekly"],["Monitoring Peralatan Kesehatan dan Tim Medis","Daily"],["Monitoring egal Compliance Health","Monthly"],["Sidak Narkoba","Weekly"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Monitoring Penerapan KPI","Daily"],["Monitoring Ketersediaan Obat - Obatan","Daily"],["Monitoring Budget Health","Weekly"],["Monitoring Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Pelaksanaan Program IH","Weekly"],["Monitoring Pelaksanaan Talent Readiness","Weekly"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Analisa Data Kunjungan Karyawan","Daily"],["Analisa Data Statistik Kesehatan","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Development SMKP dan SML","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi MCU mitra Kerja","Daily"],["Lain - Lain","Tentative"]],"Medic":[["P5M","Daily"],["Inspeksi dan Observasi","Weekly"],["Monitoring Peralatan Kesehatan dan Tim Medis","Daily"],["Pelayanan Kesehatan","Daily"],["Sidak Narkoba","Weekly"],["Monitoring Ketersediaan Obat - Obatan","Daily"],["Monitoring Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Pelaksanaan Program IH","Weekly"],["Test fatigue","Weekly"],["Input Data Kunjungan Karyawan","Daily"],["Input Data Statistik Kesehatan","Daily"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Lain - Lain","Tentative"]],"Superintendent Environment":[["P5M","Daily"],["Over Inspeksi dan Observasi","Weekly"],["Monitoring dan Evaluasi Kesiapan Alat Monev danTim Enviro","Daily"],["Monitoring dan Evaluasi Legal Compliance Environment","Monthly"],["Monitoring dan Evaluasi SPDK dan Prosedur Environment","Daily"],["Rapat Koordinasi","Weekly"],["Monitoring dan Evaluasi Kinerja Tim","Daily"],["Monitoring dan Evaluasi KPI","Daily"],["Monitoring dan Evaluasi Budget Environment","Weekly"],["Monitoring dan Evaluasi Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Evaluasi Talent Readiness","Weekly"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan Lingkungan","Tentative"],["Analisa Data Potensi Dampak Lingkungan","Daily"],["Analisa Data Statistik Lingkungan","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Pelaksanaan Audit","Tentative"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Development SMLH","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Propernas","Monthly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi Kualitas BM Lingkungan","Daily"],["Lain - Lain","Tentative"]],"Supervisor Environment Operational":[["P5M","Daily"],["Inspeksi dan Observasi","Daily"],["Monitoring Kesiapan Alat Monev danTim Enviro","Daily"],["Monitoring Penerapan SPDK dan Prosedur Environment","Daily"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Pembuatan Data Potensi Dampak Lingkungan","Daily"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan Lingkungan","Tentative"],["Pelakasanaan Survei Lokasi dan Penyelesain Case Lingkungan","Tentative"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Monitoring Kualitas BM Lingkungan","Daily"],["Monitoring Penggunaan Alat Rental","Daily"],["Lain - Lain","Tentative"]],"Supervisor Environment System, Development & Compliance":[["P5M","Daily"],["Monitoring dan Evaluasi Legal Compliance Environment","Monthly"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Monitoring KPI","Daily"],["Monitoring Budget Environment","Weekly"],["Monitoring Pengajuan IM, MR,dll","Weekly"],["Monitoring Pelaksanaan Talent Readiness","Weekly"],["Analisa Data Potensi Dampak Lingkungan","Daily"],["Analisa Data Statistik Lingkungan","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Pelaksanaan Audit","Tentative"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Development SMLH","Weekly"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Pemenuhan Data Propernas","Monthly"],["Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi Kualitas BM Lingkungan","Daily"],["Lain - Lain","Tentative"]],"Environment Officer":[["P5M","Daily"],["Monitoring dan Evaluasi Legal Compliance Environment","Monthly"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Monitoring KPI","Daily"],["Monitoring Budget Environment","Weekly"],["Pengajuan IM, MR,dll","Weekly"],["Analisa Data Potensi Dampak Lingkungan","Daily"],["Analisa Data Statistik Lingkungan","Daily"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Pemenuhan Data Propernas","Monthly"],["Reporting internal dan eksternal","Monthly"],["Monitoring dan Evaluasi Kualitas BM Lingkungan","Daily"],["Lain - Lain","Tentative"]],"Foreman Environment Operational":[["P5M","Daily"],["Inspeksi dan Observasi","Daily"],["Monitoring Kesiapan Alat Monev danTim Enviro","Daily"],["Monitoring Penerapan SPDK dan Prosedur Environment","Daily"],["Rapat Koordinasi","Weekly"],["Monitoring Kinerja Tim","Daily"],["Pembuatan Data Potensi Dampak Lingkungan","Daily"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan Lingkungan","Tentative"],["Pelakasanaan Survei Lokasi dan Penyelesain Case Lingkungan","Tentative"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Implementasi Program Improvement","Weekly"],["Monitoring Kualitas BM Lingkungan","Daily"],["Monitoring Penggunaan Alat Rental","Daily"],["Pelaksanaan Pengelolaan LB3 di TPS","Daily"],["Lain - Lain","Tentative"]],"Crew Environment":[["P5M","Daily"],["Pengambilan Sampel Air","Daily"],["Pelaksanaan Pengelolaan LB3 di TPS","Daily"],["Monitoring Penggunaan Alat Rental","Daily"],["Lain - Lain","Tentative"]],"Superintendent TC":[["P5M","Daily"],["Over Inspeksi dan Observasi","Weekly"],["Rapat Koordinasi","Weekly"],["Monitoring dan Evaluasi Kinerja Tim","Daily"],["Monitoring dan Evaluasi KPI","Daily"],["Monitoring dan Evaluasi Budget TC","Weekly"],["Monitoring dan Evaluasi Pengajuan IM, MR,dll","Weekly"],["Monitoring dan Evaluasi Talent Readiness","Weekly"],["Monitoring dan Evaluasi Pelaksanaan Investigasi Kecelakaan","Tentative"],["Push Perbaikan Temuan ( Inspeksi, Investigasi,Audit, Eksternal )","Daily"],["Koordinasi Dengan stakeholder ( Internal dan Eksternal )","Tentative"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Progress dan evaluasi Peningkatan kompetensi aspek Operasional, K3","Weekly"],["Pembuatan dan Evaluasi Matrik Training, TNA, ATMP","Weekly"],["Pelaksanaan Evaluasi Prodactivity Unit dari Aspek Pengoperasian dan Safety untuk Internal dan Mitra","Weekly"],["Lain - Lain","Tentative"]],"Training Center & Commissioning Supervisor Ops":[["P5M","Daily"],["Pelaksanaan test kimper dan pelaksanaan commissioning unit","Daily"],["Pelaksanaan Plant Task Observation (PTO) secara berkala","Daily"],["Pelaksanaan Monitoring Upgrade Skill Internal dan Mitra Kerja dari aspek Operational","Weekly"],["Pelaksanaan Evaluasi Prodactivity Unit dari Aspek Pengoperasian","Weekly"],["Pelaksanaan Refreshment Driver dan Operator Secara Berkala","Weekly"],["Join investigasi bila di perlukan dan berhubungan dengan pengoperasian unit","Tentative"],["Review dan pembuatan SOP","Tentative"],["Pembuatan Silabus dan Materi Training","Tentative"],["Training internal dan Eksternal","Tentative"],["Implementasi Program Improvement","Weekly"],["Monitoring dan Evaluasi Reporting internal dan eksternal","Monthly"],["Progress dan evaluasi Peningkatan kompetensi aspek Operasional, K3","Weekly"],["Pembuatan dan Evaluasi Matrik Training, TNA, ATMP","Weekly"],["Pelaksanaan Evaluasi Prodactivity Unit dari Aspek Pengoperasian dan Safety untuk Internal dan Mitra","Weekly"],["Lain - Lain","Tentative"]],"Training Center & Commissioning Officer":[["P5M","Daily"],["Daily Reporting","Daily"],["Pelaksanaan test kimper dan pelaksanaan commissioning unit","Daily"],["Pelaksanaan Plant Task Observation (PTO) secara berkala","Daily"],["Persiapan pelaksanaan Training HSE dan Operasional","Daily"],["Monitoring dan push plan dan evaluasi training level 3-4 kepada masing - masing Dept","Daily"],["Monitoring dan evaluasi data PTO","Weekly"],["Lain - Lain","Tentative"]]}};
+let dailyData = [], daUnsub = null, daEditingId = null;
+
+function daNorm(x){ return String(x||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }
+function daMatchPersonil(nama){
+  const n = daNorm(nama); if(!n) return null;
+  let m = DA_MASTER.p.find(p=>daNorm(p[0])===n);
+  if(m) return m;
+  const nt = n.split(' ');
+  return DA_MASTER.p.find(p=>{
+    const pt = daNorm(p[0]).split(' ');
+    return pt.length>1 && nt.length>1 && pt[0]===nt[0] && pt[pt.length-1]===nt[nt.length-1];
+  }) || null;
+}
+function isDailyUser(){
+  if(isKimperUser()) return true;
+  const s = checkAlreadyLoggedIn();
+  return !!(s && daMatchPersonil(s.nama));
+}
+function daToday(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function daDurasi(m,s){
+  if(!m||!s) return '';
+  const a=m.split(':'), b=s.split(':');
+  let x=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]); if(x<0) x+=1440;
+  return Math.round(x/60*100)/100;
+}
+function daFrek(jab, keg){
+  const l = DA_MASTER.k[jab]||[]; const f = l.find(x=>x[0]===keg); return f ? f[1] : '';
+}
+function daRowFor(r){
+  return {
+    'Tanggal':r.tanggal, 'Nama Personil':r.nama||'', 'Kegiatan':r.kegiatan||'',
+    'Jam Mulai':r.mulai||'', 'Jam Selesai':r.selesai||'', 'Status':r.status||'', 'Keterangan':r.ket||''
+  };
+}
+async function daSync(action, rec){
+  if(!DAILY_SYNC_URL) return false;
+  try{
+    const body = { secret:DAILY_SYNC_SECRET, action, id:rec.id, row: action==='delete' ? null : daRowFor(rec) };
+    await fetch(DAILY_SYNC_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
+    return true;
+  }catch(e){ console.error('Sync Google Sheet gagal', e); return false; }
+}
+function daUpdateSyncInfo(){
+  $('daSyncInfo').textContent = DAILY_SYNC_URL
+    ? '✅ Tersambung: data otomatis masuk ke sheet "Input" Daily Monitoring HSE.'
+    : 'ℹ️ Sinkron Google Sheet belum diaktifkan — data tetap tersimpan di aplikasi.';
+  $('daResyncBtn').style.display = (DAILY_SYNC_URL && isAdminUser()) ? '' : 'none';
+}
+function daFillNama(){
+  $('da_nama').innerHTML = '<option value="">— Pilih nama —</option>' + DA_MASTER.p.map(p=>`<option value="${kpEsc(p[0])}">${kpEsc(p[0])}</option>`).join('');
+}
+function daOnNama(keepKeg){
+  const p = DA_MASTER.p.find(x=>x[0]===$('da_nama').value);
+  $('da_jabatan').value = p ? p[1] : '';
+  $('da_section').value = p ? p[2] : '';
+  const list = p ? (DA_MASTER.k[p[1]]||[]) : [];
+  const prev = keepKeg || '';
+  $('da_kegiatan').innerHTML = '<option value="">— Pilih kegiatan —</option>' + list.map(k=>`<option value="${kpEsc(k[0])}">${kpEsc(k[0])} (${kpEsc(k[1])})</option>`).join('');
+  if(prev) $('da_kegiatan').value = prev;
+  daOnKeg();
+}
+function daOnKeg(){
+  const f = daFrek($('da_jabatan').value, $('da_kegiatan').value);
+  $('daFrekInfo').textContent = f ? 'Frekuensi: ' + f : '';
+}
+$('da_nama').addEventListener('change', ()=>daOnNama());
+$('da_kegiatan').addEventListener('change', daOnKeg);
+
+function daResetForm(){
+  daEditingId = null;
+  const s = checkAlreadyLoggedIn();
+  const me = s ? daMatchPersonil(s.nama) : null;
+  $('da_tanggal').value = daToday();
+  daFillNama();
+  $('da_nama').value = me ? me[0] : '';
+  daOnNama();
+  ['da_mulai','da_selesai','da_ket'].forEach(i=>$(i).value='');
+  $('da_status').value = 'Selesai';
+  $('daSubmitBtn').textContent = 'Simpan Kegiatan';
+  $('daCancelEditBtn').style.display = 'none';
+  daUpdateSyncInfo();
+}
+$('daSubmitBtn').addEventListener('click', async ()=>{
+  if(!isDailyUser()){ showToast('Menu Daily Activity khusus tim HSE.'); return; }
+  const tanggal=$('da_tanggal').value, nama=$('da_nama').value, kegiatan=$('da_kegiatan').value, mulai=$('da_mulai').value, selesai=$('da_selesai').value;
+  if(!tanggal || !nama || !kegiatan){ showToast('Lengkapi Tanggal, Nama, dan Kegiatan.'); return; }
+  if(!mulai || !selesai){ showToast('Isi Jam Mulai dan Jam Selesai.'); return; }
+  const s = checkAlreadyLoggedIn();
+  const jab = $('da_jabatan').value;
+  const data = {
+    tanggal, nama, jabatan:jab, section:$('da_section').value, kegiatan, frekuensi:daFrek(jab,kegiatan),
+    mulai, selesai, status:$('da_status').value, ket:$('da_ket').value.trim(), updatedAt:Date.now()
+  };
+  $('daSubmitBtn').disabled = true;
+  try{
+    let rec;
+    if(daEditingId){
+      const old = dailyData.find(x=>x.id===daEditingId);
+      rec = Object.assign({}, data, { dibuatOleh:old.dibuatOleh||'', nik:old.nik||'', createdAt:old.createdAt||Date.now() });
+      await db.collection(DAILY_COLLECTION).doc(daEditingId).set(rec); rec.id = daEditingId;
+    } else {
+      rec = Object.assign({}, data, { dibuatOleh:s?s.nama:'', nik:s?s.nik:'', createdAt:Date.now() });
+      const ref = await db.collection(DAILY_COLLECTION).add(rec); rec.id = ref.id;
+    }
+    showToast('Kegiatan tersimpan.');
+    daSync('upsert', rec);
+    daResetForm();
+    document.querySelector('#dailyTabs .tab[data-dview="riwayat"]').click();
+  }catch(err){
+    console.error(err);
+    showToast('Gagal menyimpan — cek koneksi internet / Firestore Rules.');
+  }
+  $('daSubmitBtn').disabled = false;
+});
+$('daCancelEditBtn').addEventListener('click', daResetForm);
+
+function daFiltered(){
+  const from=$('daFrom').value, to=$('daTo').value, pt=$('daFilterPetugas').value;
+  return dailyData.filter(r=>(!from||r.tanggal>=from)&&(!to||r.tanggal<=to)&&(!pt||r.nama===pt))
+    .sort((a,b)=>(b.tanggal||'').localeCompare(a.tanggal||'')||(b.mulai||'').localeCompare(a.mulai||''));
+}
+function daRenderList(){
+  const sel=$('daFilterPetugas'), cur=sel.value;
+  const names=[...new Set(dailyData.map(r=>r.nama).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Semua personil</option>'+names.map(n=>`<option value="${kpEsc(n)}">${kpEsc(n)}</option>`).join('');
+  sel.value=cur;
+  const list=$('daList'), arr=daFiltered();
+  if(arr.length===0){ list.innerHTML='<div class="empty-state"><div class="big">🗓️</div>Belum ada kegiatan.<br>Isi di tab "Input Kegiatan".</div>'; return; }
+  const me = checkAlreadyLoggedIn()||{};
+  list.innerHTML = arr.map(r=>{
+    const [yy,mm,dd]=r.tanggal.split('-');
+    const jam=(r.mulai||'?')+'–'+(r.selesai||'?');
+    const dur=daDurasi(r.mulai,r.selesai);
+    const done = r.status==='Selesai';
+    return `
+    <div class="ticket" style="border-left-color:#B45309;">
+      <div class="ticket-top">
+        <span class="ticket-no">${kpEsc(r.nama)}</span>
+        <span class="ticket-status" style="background:${done?'#DDF0E3':'#FDEBD0'};color:${done?'#178A4C':'#B45309'};">${kpEsc(r.status||'')}</span>
+      </div>
+      <div class="ticket-loc">${dd}/${mm}/${yy} · ${jam}${dur!==''?' ('+dur+' jam)':''}${r.frekuensi?' · '+kpEsc(r.frekuensi):''}</div>
+      <div class="ticket-txt">${kpEsc(r.kegiatan)}${r.ket?' — '+kpEsc(r.ket):''}</div>
+      <div class="ticket-meta"><span>${kpEsc(r.jabatan||'')}</span></div>
+      <div class="ticket-actions">
+        ${(me.nik===r.nik||isAdminUser())?`<button onclick="daEdit('${r.id}')">Edit</button>`:''}
+        ${isAdminUser()?`<button class="del" onclick="daDelete('${r.id}')">Hapus</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function daEdit(id){
+  const r=dailyData.find(x=>x.id===id); if(!r) return;
+  daEditingId=id;
+  $('da_tanggal').value=r.tanggal;
+  daFillNama();
+  $('da_nama').value=r.nama||'';
+  daOnNama(r.kegiatan);
+  $('da_mulai').value=r.mulai||''; $('da_selesai').value=r.selesai||'';
+  $('da_ket').value=r.ket||''; $('da_status').value=r.status||'Selesai';
+  $('daSubmitBtn').textContent='Simpan Perubahan'; $('daCancelEditBtn').style.display='block';
+  document.querySelector('#dailyTabs .tab[data-dview="input"]').click();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function daDelete(id){
+  if(!isAdminUser()){ showToast('Hanya admin yang bisa menghapus data.'); return; }
+  if(!confirm('Hapus kegiatan ini? Barisnya di Google Sheet juga ikut dihapus.')) return;
+  try{ await db.collection(DAILY_COLLECTION).doc(id).delete(); daSync('delete',{id}); }
+  catch(e){ showToast('Gagal menghapus.'); }
+}
+$('daFrom').addEventListener('change',daRenderList);
+$('daTo').addEventListener('change',daRenderList);
+$('daFilterPetugas').addEventListener('change',daRenderList);
+
+$('daExportBtn').addEventListener('click', async ()=>{
+  const arr=daFiltered().slice().reverse();
+  if(arr.length===0){ showToast('Tidak ada data pada filter ini.'); return; }
+  try{
+    showToast('Menyiapkan file Excel...');
+    const wb=new ExcelJS.Workbook(); wb.creator='CITA MOBILE — HSE PT CMI Site Sandai';
+    const ws=wb.addWorksheet('Input');
+    const cols=[['No',6],['Tanggal',12],['Nama Personil',26],['Jabatan',30],['Section',14],['Kegiatan',46],['Frekuensi',11],['Jam Mulai',10],['Jam Selesai',11],['Lama Pekerjaan',14],['Status',14],['Keterangan',40]];
+    ws.columns=cols.map(c=>({header:c[0],width:c[1]}));
+    arr.forEach((r,i)=>{
+      const [y,m,d]=r.tanggal.split('-').map(Number);
+      ws.addRow([i+1,new Date(Date.UTC(y,m-1,d)),r.nama,r.jabatan||'',r.section||'',r.kegiatan,r.frekuensi||'',r.mulai,r.selesai,daDurasi(r.mulai,r.selesai),r.status,r.ket||'']);
+    });
+    ws.getColumn(2).numFmt='dd/mm/yyyy';
+    const hr=ws.getRow(1);
+    hr.font={name:'Calibri',bold:true,color:{argb:'FFFFFFFF'}};
+    hr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F3A5F'}};
+    hr.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+    ws.eachRow((row,n)=>{ row.eachCell(c=>{ c.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}; if(n>1) c.alignment={vertical:'top',wrapText:true}; }); });
+    ws.views=[{state:'frozen',ySplit:1}];
+    const buf=await wb.xlsx.writeBuffer();
+    const url=URL.createObjectURL(new Blob([buf],{type:'application/octet-stream'}));
+    const a=document.createElement('a'); a.href=url; a.download='Daily_Activity_HSE_'+daToday()+'.xlsx';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('File Excel berhasil diunduh.');
+  }catch(e){ console.error(e); showToast('Gagal membuat file Excel.'); }
+});
+$('daResyncBtn').addEventListener('click', async ()=>{
+  if(!isAdminUser()) return;
+  const arr=[...dailyData].sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||'')||(a.mulai||'').localeCompare(b.mulai||''));
+  if(!confirm('Kirim ulang '+arr.length+' data ke Google Sheet? Baris yang sudah ada diperbarui, bukan digandakan.')) return;
+  showToast('Mengirim ulang...');
+  for(const r of arr){ await daSync('upsert', r); await new Promise(ok=>setTimeout(ok,1200)); }
+  showToast('Selesai dikirim ulang.');
+});
+
+function daAttachListener(){
+  if(daUnsub) return;
+  daUnsub = db.collection(DAILY_COLLECTION).onSnapshot(
+    (snap)=>{
+      dailyData = snap.docs.map(d=>({id:d.id,...d.data()}));
+      if($('view-daily-riwayat').classList.contains('active')) daRenderList();
+    },
+    (err)=>{ console.error(err); showToast('Gagal memuat Daily Activity — cek Firestore Rules.'); }
+  );
+}
+function openDailyModule(){
+  if(!isDailyUser()){ showToast('Menu Daily Activity khusus tim HSE.'); return; }
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  ['ktattaTabs','blastTabs','sgTabs','mitraTabs','kimperTabs'].forEach(id=>{ if($(id)) $(id).style.display='none'; });
+  document.querySelectorAll('#dailyTabs .tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  $('view-daily-input').classList.add('active');
+  $('dailyTabs').style.display='flex';
+  $('counterBadge').style.display='none';
+  $('brandTitleText').textContent='DAILY ACTIVITY';
+  $('brandSubtitle').textContent='Kegiatan Harian Tim HSE';
+  daAttachListener();
+  if(!daEditingId) daResetForm();
+}
+$('openDaily').addEventListener('click', openDailyModule);
+document.querySelectorAll('#dailyTabs .tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#dailyTabs .tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    $('view-daily-'+tab.dataset.dview).classList.add('active');
+    if(tab.dataset.dview==='riwayat') daRenderList();
+  });
+});
+// ===DAILY_END===
 
 function $(id){return document.getElementById(id);}
 function populateDatalist(el, arr){ el.innerHTML = arr.map(v=>`<option value="${v}"></option>`).join(''); }
@@ -3046,7 +3354,7 @@ function goHome(){
   $('blastTabs').style.display = 'none';
   $('sgTabs').style.display = 'none';
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('counterBadge').style.display = 'none';
   $('brandTitleText').textContent = 'CITA MOBILE';
   $('brandSubtitle').textContent = 'PICA Field Report';
@@ -3060,7 +3368,7 @@ function openKtaTtaModule(){
   $('blastTabs').style.display = 'none';
   $('sgTabs').style.display = 'none';
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('counterBadge').style.display = '';
   $('brandTitleText').textContent = 'CITA MOBILE';
   $('brandSubtitle').textContent = 'PICA Field Report';
@@ -3074,7 +3382,7 @@ function openBlastModule(){
   $('ktattaTabs').style.display = 'none';
   $('sgTabs').style.display = 'none';
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('counterBadge').style.display = 'none';
   $('brandTitleText').textContent = 'CITA BLAST';
   $('brandSubtitle').textContent = 'Poster & Pengumuman';
@@ -3089,7 +3397,7 @@ function openSpeedgunModule(){
   $('ktattaTabs').style.display = 'none';
   $('blastTabs').style.display = 'none';
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('counterBadge').style.display = 'none';
   $('brandTitleText').textContent = 'SPEEDGUN';
   $('brandSubtitle').textContent = 'Inspeksi Kecepatan Kendaraan';
@@ -3101,7 +3409,7 @@ function openMitraModule(){
   $('blastTabs').style.display = 'none';
   $('sgTabs').style.display = 'none';
   $('mitraTabs').style.display = 'none';
-  if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+  if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
   $('counterBadge').style.display = 'none';
   $('brandTitleText').textContent = 'PENGAJUAN MITRA KERJA';
   $('brandSubtitle').textContent = 'CITA MOBILE';
@@ -3121,7 +3429,7 @@ function mitraRouteAfterLogin(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     $('view-mitra-approver').classList.add('active');
     $('mitraTabs').style.display = 'none';
-    if($('kimperTabs')) $('kimperTabs').style.display = 'none';
+    if($('kimperTabs')) $('kimperTabs').style.display = 'none'; if($('dailyTabs')) $('dailyTabs').style.display = 'none';
     renderMitraApproverList();
   } else if(MITRA_COMPANY_MAP[uid]){
     mitraCurrentRole = 'company';
