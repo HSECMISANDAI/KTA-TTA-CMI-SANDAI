@@ -1195,7 +1195,8 @@ function showAppError(msg){
 }
 window.addEventListener('error', (e)=>{
   console.error('Global error:', e.error || e.message);
-  showAppError('⚠️ Terjadi kesalahan pada aplikasi. Coba muat ulang halaman. Jika berulang, hubungi Spv. Safety.');
+  const detail = (e.message ? ' [' + e.message + (e.lineno ? ' @' + e.lineno : '') + ']' : '');
+  showAppError('⚠️ Terjadi kesalahan pada aplikasi. Coba muat ulang halaman. Jika berulang, hubungi Spv. Safety.' + detail);
 });
 window.addEventListener('unhandledrejection', (e)=>{
   console.error('Unhandled promise rejection:', e.reason);
@@ -3093,10 +3094,25 @@ function daMatchPersonil(nama){
     return pt.length>1 && nt.length>1 && pt[0]===nt[0] && pt[pt.length-1]===nt[nt.length-1];
   }) || null;
 }
+// Nama di data karyawan kadang beda ejaan dengan sheet Master — dicocokkan lewat NIK.
+const DA_NIK_ALIAS = {
+  'CMI2504000094': 'Act Sabari',
+  'CMI2607000331': 'Miftahul Arifin',
+  'CMI2607000345': 'M Rizqi Darmawan',
+  'CMI2609000418': 'Fariz'
+};
+function daMatchSession(s){
+  if(!s) return null;
+  const al = DA_NIK_ALIAS[normalizeNik(s.nik)];
+  if(al){ const m = DA_MASTER.p.find(p=>p[0]===al); if(m) return m; }
+  return daMatchPersonil(s.nama);
+}
 function isDailyUser(){
-  if(isKimperUser()) return true;
-  const s = checkAlreadyLoggedIn();
-  return !!(s && daMatchPersonil(s.nama));
+  // try/catch: dipanggil juga saat halaman baru dimuat (sebelum DA_MASTER selesai dideklarasikan)
+  try{
+    if(isKimperUser()) return true;
+    return !!daMatchSession(checkAlreadyLoggedIn());
+  }catch(e){ return false; }
 }
 function daToday(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function daDurasi(m,s){
@@ -3188,7 +3204,7 @@ $('da_kegiatan').addEventListener('change', daOnKeg);
 function daResetForm(){
   daEditingId = null;
   const s = checkAlreadyLoggedIn();
-  const me = s ? daMatchPersonil(s.nama) : null;
+  const me = daMatchSession(s);
   $('da_tanggal').value = daToday();
   daFillNama();
   $('da_nama').value = me ? me[0] : '';
@@ -3360,6 +3376,7 @@ document.querySelectorAll('#dailyTabs .tab').forEach(tab=>{
     if(tab.dataset.dview==='riwayat') daRenderList();
   });
 });
+try{ kpToggleHomeCard(); }catch(e){}   // tampilkan kartu menu sekarang setelah data Master siap
 // ===DAILY_END===
 
 function $(id){return document.getElementById(id);}
