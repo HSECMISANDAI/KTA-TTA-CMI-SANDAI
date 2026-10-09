@@ -1320,20 +1320,45 @@ function isAdminUser(){
   return !!session && session.nik === ADMIN_NIK;
 }
 
-// Menu KIMPER (Berita Acara Tes Teori & Praktek) — khusus tim HSE / Training Center.
+// Menu KIMPER & Daily Activity — seluruh karyawan Departemen HSE (Safety, Environment, Health, Training Center) per database 09-10-2026.
+// Karyawan HSE baru: tambahkan NIK di daftar ini.
 // CATATAN: pembatasan ini di level tampilan saja (login NIK+Nama, bukan Firebase Auth).
 const KIMPER_ACCESS_NIK = [
-  'CMI260100406', // Idola Kulana (admin)
-  'CMI260500472', // Dody Patah Kristanto
-  'CMI250600301', // Rizki Kurniawan
-  'CMI250600300', // Agus Novianto
+  'CMI260500472', // Dody Patah Kristanto (HSE)
+  'CMI261000608', // Calvin Horas Pangihutan (Environment)
+  'CMI260800577', // Rendy Boyma Tulus Panjaitan (Environment)
+  'CMI230900208', // Aldice Sekar Arum R (Environment)
+  'CMI2503000075', // Sarah Ayani (Environment)
+  'CMI2504000084', // Maiko Febriano Legi (Environment)
+  'CMI2601000235', // Indra Juniarsa (Environment)
+  'CMI2504000094', // Sabari (Environment)
+  'CMI2607000360', // Hasirin (Environment)
+  'CMI2607000383', // Muhammad Phatur Rakhman (Environment)
+  'CMI261000618', // Marhara S.I.P Pasaribu (Health)
+  'CMI200300152', // Alfiansyah (Health)
+  'CMI2505000103', // Siska Permatasari (Health)
+  'CMI2506000117', // Fuad (Health)
+  'CMI2508000156', // Almuhayan (Health)
+  'CMI2605000262', // Aryan Roshandi (Health)
+  'CMI2606000311', // Siti Kholijah Pulungan (Health)
+  'CMI250600301', // Rizki Kurniawan (Safety)
+  'CMI250600300', // Agus Novianto (Safety)
+  'CMI260100406', // Idola Kulana (Safety)
+  'CMI260900572', // Adri Muhammad Taher (Safety)
+  'CMI260900612', // Andi Fatawari DM (Training Center)
+  'CMI260700576', // Dedy Yusup (Training Center)
   'CMI2609000418', // Farizd R (Training Center)
-  'CMI260700576', // Dedy Yusup
-  'CMI2509000157', // Hamim Tades
-  'CMI2503000076', // M. Safe'ei Udin Nur
-  'CMI2607000353', // Fadrian Zalmon Dinamu
-  'CMI2606000317', // Irfan Naufal Hartanto
-  'CMI2607000345'  // Muhammad Rizqi Darmawan
+  'CMI2509000158', // Yustina Sari (Safety)
+  'CMI2503000076', // M. Safe'ei Udin Nur (Safety)
+  'CMI2509000157', // Hamim Tades (Safety)
+  'CMI2606000317', // Irfan Naufal Hartanto (Safety)
+  'CMI2607000345', // Muhammad Rizqi Darmawan (Safety)
+  'CMI2607000353', // Fadrian Zalmon Dinamu (Safety)
+  'CMI2507000148', // Rechal Sanuardi (Safety)
+  'CMI2511000221', // Haruni (Safety)
+  'CMI2607000330', // Harisno (Safety)
+  'CMI2607000331', // Mitahul Aripin (Safety)
+  'CMI2607000332' // Jasmin (B) (Safety)
 ];
 function isKimperUser(){
   const session = checkAlreadyLoggedIn();
