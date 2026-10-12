@@ -260,28 +260,63 @@
   .ticket-actions button.del{color:var(--extreme);}
   .empty-state{text-align:center;padding:50px 20px;color:var(--ink-soft);}
   /* ===== DASHBOARD DAILY ===== */
-  .dd-switch{display:flex;gap:6px;margin-bottom:12px;}
-  .dd-sw{flex:1;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;padding:9px 6px;font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;cursor:pointer;}
-  .dd-sw.active{background:var(--steel);border-color:var(--steel);color:#fff;}
-  .dd-ctl{margin-bottom:10px;}
-  .dd-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
-  .dd-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 1px 3px rgba(11,30,51,.05);}
-  .dd-card .t{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);}
-  .dd-card .v{font-size:22px;font-weight:800;color:var(--steel);margin-top:2px;}
-  .dd-card .s{font-size:11px;color:var(--ink-soft);margin-top:1px;}
-  .dd-sec{font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;color:var(--steel-2);margin:16px 0 6px;display:flex;justify-content:space-between;}
-  .dd-row{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;}
-  .dd-row .h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-  .dd-row .n{font-weight:700;font-size:13px;color:var(--ink);}
-  .dd-row .j{font-size:11px;color:var(--ink-soft);margin-top:1px;}
-  .dd-badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:10.5px;font-weight:700;white-space:nowrap;}
-  .dd-bar{height:6px;background:#EEF0F3;border-radius:99px;overflow:hidden;margin-top:8px;}
+  .dd-switch{display:flex;background:var(--paper-2);padding:4px;border-radius:999px;gap:2px;margin-bottom:14px;}
+  .dd-sw{flex:1;border:none;background:transparent;color:var(--ink-soft);border-radius:999px;padding:9px 6px;font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;cursor:pointer;transition:background .15s,color .15s;}
+  .dd-sw.active{background:var(--steel);color:#fff;box-shadow:0 2px 6px rgba(11,30,51,.25);}
+  .dd-ctl{margin-bottom:12px;}
+  .dd-ctl label{display:block;margin-bottom:6px;}
+  .dd-hero{background:linear-gradient(160deg,#0B1E33 0%,#15304D 100%);border-radius:18px;padding:18px 16px 0;color:#fff;overflow:hidden;box-shadow:0 8px 20px rgba(11,30,51,.22);}
+  .dd-hero-top{display:flex;align-items:center;gap:16px;}
+  .dd-ring{position:relative;width:104px;height:104px;flex:none;}
+  .dd-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .dd-ring .bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:9;}
+  .dd-ring .fg{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.2,.7,.2,1);}
+  .dd-ring .ct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .dd-ring .ct b{font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;line-height:1;font-variant-numeric:tabular-nums;}
+  .dd-ring .ct span{font-size:11px;color:rgba(255,255,255,.65);margin-top:4px;}
+  .dd-hero-txt{min-width:0;flex:1;}
+  .dd-date{font-family:'Manrope',sans-serif;font-weight:800;font-size:17px;line-height:1.25;}
+  .dd-sub{font-size:12.5px;color:rgba(255,255,255,.72);margin-top:4px;line-height:1.4;}
+  .dd-sub b{color:#fff;font-size:15px;}
+  .dd-seg{display:flex;gap:3px;margin-top:12px;}
+  .dd-seg i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.14);}
+  .dd-seg i.on{background:#F59E5B;}
+  .dd-strip{display:grid;grid-template-columns:repeat(4,1fr);margin:18px -16px 0;border-top:1px solid rgba(255,255,255,.12);}
+  .dd-strip>div{padding:12px 4px 13px;text-align:center;}
+  .dd-strip>div+div{border-left:1px solid rgba(255,255,255,.12);}
+  .dd-strip b{display:block;font-family:'Manrope',sans-serif;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums;}
+  .dd-strip span{display:block;font-size:10.5px;color:rgba(255,255,255,.62);margin-top:2px;}
+  .dd-info{margin:12px 2px 0;font-size:12px;color:var(--ink-soft);}
+  .dd-info summary{cursor:pointer;font-weight:600;color:var(--steel-2);list-style:none;}
+  .dd-info summary::-webkit-details-marker{display:none;}
+  .dd-info summary::before{content:'ⓘ ';}
+  .dd-info div{margin-top:6px;line-height:1.55;}
+  .dd-sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 8px;padding-left:10px;border-left:3px solid var(--hazard);}
+  .dd-sec .a{font-family:'Manrope',sans-serif;font-weight:800;font-size:14px;color:var(--steel);}
+  .dd-sec .b{font-size:11.5px;color:var(--ink-soft);}
+  .dd-row{display:grid;grid-template-columns:40px 1fr auto;column-gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s;}
+  .dd-row:active{box-shadow:0 0 0 2px rgba(234,106,36,.25);}
+  .dd-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;}
+  .dd-main{min-width:0;}
+  .dd-main .n{font-weight:700;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dd-main .j{font-size:11.5px;color:var(--ink-soft);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dd-pct{text-align:right;}
+  .dd-pct b{display:block;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .dd-pct span{display:block;font-size:10.5px;font-weight:700;margin-top:2px;}
+  .dd-bar{grid-column:1/-1;height:5px;background:#EEF0F3;border-radius:99px;overflow:hidden;margin-top:11px;}
   .dd-bar i{display:block;height:100%;border-radius:99px;}
-  .dd-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--ink-soft);margin-top:6px;}
-  .dd-meta b{color:var(--ink);}
-  .dd-det{display:none;margin-top:8px;border-top:1px dashed var(--line);padding-top:8px;font-size:12px;}
+  .dd-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:3px 14px;font-size:11.5px;color:var(--ink-soft);margin-top:9px;}
+  .dd-meta b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;}
+  .dd-det{display:none;grid-column:1/-1;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;}
   .dd-row.open .dd-det{display:block;}
-  .dd-det div{padding:3px 0;line-height:1.4;}
+  .dd-det .it{position:relative;padding:0 0 10px 16px;line-height:1.45;}
+  .dd-det .it::before{content:'';position:absolute;left:3px;top:6px;width:7px;height:7px;border-radius:50%;background:var(--hazard);}
+  .dd-det .it::after{content:'';position:absolute;left:6px;top:15px;bottom:0;width:1px;background:var(--line);}
+  .dd-det .it:last-child{padding-bottom:0;}
+  .dd-det .it:last-child::after{display:none;}
+  .dd-det .tm{font-weight:700;color:var(--steel-2);font-variant-numeric:tabular-nums;}
+  .dd-det .kt{color:var(--ink-soft);}
+  @media (prefers-reduced-motion:reduce){.dd-ring .fg{transition:none;}}
   /* ===== KIMPER ===== */
   .kp-hint{font-size:12px;color:var(--ink-soft);background:#F3EEFC;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.5;}
   .kp-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(11,30,51,.05);}
@@ -1124,7 +1159,8 @@
       </div>
       <div id="ddCtlHarian" class="dd-ctl"><label>Tanggal</label><input type="date" id="ddTanggal"></div>
       <div id="ddCtlBulanan" class="dd-ctl" style="display:none;"><label>Bulan</label><input type="month" id="ddBulan"></div>
-      <div class="kp-hint" id="ddInfo"></div>
+      <div id="ddHeroWrap"></div>
+      <details class="dd-info"><summary>Cara menghitung</summary><div id="ddInfoTxt"></div></details>
       <div id="ddBody"></div>
     </div>
   </main>
@@ -3460,6 +3496,7 @@ function openDailyModule(){
   document.querySelectorAll('#dailyTabs .tab').forEach((t,i)=>t.classList.toggle('active',i===0));
   $('view-daily-input').classList.add('active');
   $('dailyTabs').style.display='flex';
+  const ddTab=document.querySelector('#dailyTabs .tab[data-dview="dash"]'); if(ddTab) ddTab.style.display = isKimperUser() ? '' : 'none';   // Dashboard khusus Departemen HSE
   $('counterBadge').style.display='none';
   $('brandTitleText').textContent='DAILY ACTIVITY';
   $('brandSubtitle').textContent='Kegiatan Harian Tim HSE';
@@ -3481,6 +3518,8 @@ document.querySelectorAll('#dailyTabs .tab').forEach(tab=>{
 // ===== Dashboard Daily Activity (dihitung di HP dari data yang sudah dimuat; rumus mengikuti sheet Calc) =====
 const DA_TARGET = {"Dody Patah Kristanto":[10,11,3],"Rizki Kurniawan":[10,8,3],"Agus Novianto":[9,3,0],"Adri Muhammad Taher":[9,3,0],"M. Safe'ei Udin Nur":[9,1,0],"Hamim Tades":[9,1,0],"Irfan Naufal Hartanto":[9,1,0],"M Rizqi Darmawan":[9,1,0],"Fadrian Zalmon Dinamu":[9,1,0],"Rechal Sanuardi":[7,0,0],"Haruni":[7,0,0],"Miftahul Arifin":[7,0,0],"Jasmin":[7,0,0],"Harisno":[7,0,0],"Idola Kulana":[8,8,4],"Yustina Sari":[8,8,4],"Marhara S.I.P Pasaribu":[9,9,2],"Alfiansyah":[9,9,2],"Siska Permatasari":[6,6,1],"Fuad":[6,6,1],"Almuhayan":[6,6,1],"Aryan Roshandi":[6,6,1],"Siti Kholijah Pulungan":[6,6,1],"Aldice Sekar Arum. R":[7,6,3],"Sarah Ayani":[7,4,3],"Rendy Boyma Tulus Panjaitan":[9,2,0],"Maiko Febriano Legi":[10,2,0],"Indra Juniarsa":[10,2,0],"Act Sabari":[10,2,0],"Hasirin":[4,0,0],"Muhammad Phatur Rakhman":[4,0,0],"Fariz":[6,1,0],"Andi Fatawari D M":[3,7,1],"Calvin Horas P":[9,7,3]};   // [target Daily/hari, Weekly/minggu, Monthly/bulan] per personil, dari sheet Master
 const DD_SECTIONS = ['HSE Dept','Safety','Health','Environment','Training Center'];
+const DD_HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const DD_BULAN = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 let ddMode = 'harian';
 function ddPad(n){ return String(n).padStart(2,'0'); }
 function ddYMD(d){ return d.getFullYear()+'-'+ddPad(d.getMonth()+1)+'-'+ddPad(d.getDate()); }
@@ -3491,21 +3530,32 @@ function ddFrek(r){ return r.frekuensi || daFrek(r.jabatan, r.kegiatan) || ''; }
 function ddPerson(r){ const m=daMatchPersonil(r.nama); return m?m[0]:r.nama; }
 function ddNum(x){ return typeof x==='number'?x:0; }
 function ddPct(v){ return v===null||v===undefined?'-':Math.round(v*100)+'%'; }
+function ddR1(x){ return Math.round(x*10)/10; }
+function ddInit(n){ const w=String(n).replace(/\(.*?\)/g,'').trim().split(/\s+/); return ((w[0]||'')[0]||'')+((w[1]||'')[0]||''); }
 function ddStat(t){
-  if(t===null) return {k:'-',bg:'#EEF0F3',fg:'#68707C',c:'#9AA3AF'};
-  if(t>=0.9) return {k:'Baik',bg:'#DDF0E3',fg:'#178A4C',c:'#178A4C'};
-  if(t>=0.6) return {k:'Perlu Perhatian',bg:'#FBF0D0',fg:'#8A6204',c:'#C58A05'};
-  return {k:'Kurang',bg:'#FBE1E1',fg:'#C0272B',c:'#C0272B'};
+  if(t===null) return {k:'Belum ada target',bg:'#EEF0F3',fg:'#68707C',c:'#9AA3AF',ring:'#9AA3AF'};
+  if(t>=0.9) return {k:'Baik',bg:'#DDF0E3',fg:'#178A4C',c:'#178A4C',ring:'#4BDB93'};
+  if(t>=0.6) return {k:'Perlu perhatian',bg:'#FBF0D0',fg:'#8A6204',c:'#C58A05',ring:'#F6C04A'};
+  return {k:'Kurang',bg:'#FBE1E1',fg:'#C0272B',c:'#C0272B',ring:'#FF8A7A'};
 }
-function ddCards(items){
-  return '<div class="dd-cards">'+items.map(c=>`<div class="dd-card"><div class="t">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]||''}</div></div>`).join('')+'</div>';
+// Ring capaian + tiga/empat angka ringkas di bawahnya
+function ddHero(o){
+  const C=2*Math.PI*40, st=ddStat(o.pct), val=o.pct===null?0:Math.max(0,Math.min(1,o.pct));
+  const seg=o.seg?('<div class="dd-seg">'+Array.from({length:o.seg[1]},(_,i)=>'<i class="'+(i<o.seg[0]?'on':'')+'"></i>').join('')+'</div>'):'';
+  return `<div class="dd-hero"><div class="dd-hero-top">
+    <div class="dd-ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="40"></circle><circle class="fg" cx="50" cy="50" r="40" stroke="${st.ring}" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-off="${(C*(1-val)).toFixed(2)}"></circle></svg>
+      <div class="ct"><b>${ddPct(o.pct)}</b><span>${o.ringLabel}</span></div></div>
+    <div class="dd-hero-txt"><div class="dd-date">${o.title}</div><div class="dd-sub">${o.sub}</div>${seg}</div>
+  </div><div class="dd-strip">${o.strip.map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div></div>`;
 }
 function ddRow(o){
-  const st=o.noReport?{k:'Belum Lapor',bg:'#EEF0F3',fg:'#68707C',c:'#9AA3AF'}:ddStat(o.t);
+  const st=o.noReport?{k:'Belum lapor',bg:'#EEF0F3',fg:'#68707C',c:'#9AA3AF'}:ddStat(o.t);
   const w=o.t===null||o.noReport?0:Math.round(o.t*100);
+  const pct=o.noReport||o.t===null?'<b style="color:#9AA3AF;">–</b>':`<b style="color:${st.fg};">${ddPct(o.t)}</b>`;
   return `<div class="dd-row" onclick="this.classList.toggle('open')">
-    <div class="h"><div><div class="n">${kpEsc(o.p[0])}</div><div class="j">${kpEsc(o.p[1])}</div></div>
-    <span class="dd-badge" style="background:${st.bg};color:${st.fg};">${st.k}${o.t!==null&&!o.noReport?' · '+ddPct(o.t):''}</span></div>
+    <div class="dd-av" style="background:${st.bg};color:${st.fg};">${kpEsc(ddInit(o.p[0]))}</div>
+    <div class="dd-main"><div class="n">${kpEsc(o.p[0])}</div><div class="j">${kpEsc(o.p[1])}</div></div>
+    <div class="dd-pct">${pct}<span style="color:${st.fg};">${st.k}</span></div>
     <div class="dd-bar"><i style="width:${w}%;background:${st.c};"></i></div>
     <div class="dd-meta">${o.meta}</div>
     ${o.det?`<div class="dd-det">${o.det}</div>`:''}
@@ -3514,7 +3564,7 @@ function ddRow(o){
 function ddSections(rows, headRight){
   return DD_SECTIONS.map(sec=>{
     const g=rows.filter(o=>o.p[2]===sec); if(!g.length) return '';
-    return `<div class="dd-sec"><span>${sec}</span><span>${headRight(g)}</span></div>`+g.map(ddRow).join('');
+    return `<div class="dd-sec"><span class="a">${sec}</span><span class="b">${headRight(g)}</span></div>`+g.map(ddRow).join('');
   }).join('');
 }
 function ddHarian(ymd){
@@ -3543,24 +3593,19 @@ function ddHarian(ymd){
     const den=(rep?td:0)+tw+tm;
     const t=den===0?null:((rep?Math.min(dsel,td):0)+wd+md)/den;
     const det=o.recs.slice().sort((a,b)=>(a.mulai||'').localeCompare(b.mulai||'')).map(r=>
-      `<div><b>${kpEsc(r.mulai||'?')}–${kpEsc(r.selesai||'?')}</b> · ${kpEsc(r.kegiatan||'')}${r.status==='Selesai'?'':' <span style="color:#B45309;">(Belum Selesai)</span>'}${r.ket?'<br><span style="color:#68707C;">'+kpEsc(r.ket)+'</span>':''}</div>`).join('');
+      `<div class="it"><span class="tm">${kpEsc(r.mulai||'?')}–${kpEsc(r.selesai||'?')}</span> ${kpEsc(r.kegiatan||'')}${r.status==='Selesai'?'':' <span style="color:#B45309;font-weight:700;">Belum selesai</span>'}${r.ket?'<div class="kt">'+kpEsc(r.ket)+'</div>':''}</div>`).join('');
     const meta = rep
-      ? `<span>Kegiatan <b>${o.recs.length}</b></span><span>Daily <b>${dsel}/${td}</b></span><span>Weekly <b>${o.wk}/${tw}</b></span><span>Monthly <b>${o.mo}/${tm}</b></span><span>Jam <b>${Math.round(j*10)/10}</b></span>`
-      : `<span>Belum ada kegiatan pada tanggal ini</span><span>Weekly <b>${o.wk}/${tw}</b></span><span>Monthly <b>${o.mo}/${tm}</b></span>`;
+      ? `<span>Kegiatan <b>${o.recs.length}</b></span><span>Daily <b>${dsel}/${td}</b></span><span>Weekly <b>${o.wk}/${tw}</b></span><span>Monthly <b>${o.mo}/${tm}</b></span><span>Jam <b>${ddR1(j)}</b></span>`
+      : `<span>Belum ada kegiatan hari ini</span><span>Weekly <b>${o.wk}/${tw}</b></span><span>Monthly <b>${o.mo}/${tm}</b></span>`;
     return {p:p,t:t,noReport:!rep,meta:meta,det:det};
   });
   const pD=sumTd?Math.min(1,sumD/sumTd):null, pW=sumTw?Math.min(1,sumW/sumTw):null, pM=sumTm?Math.min(1,sumM/sumTm):null;
-  const [yy,mm,dd]=ymd.split('-');
-  const cards=ddCards([
-    ['Personil lapor',lapor+' / '+DA_MASTER.p.length,(DA_MASTER.p.length-lapor)+' belum lapor'],
-    ['Capaian Daily',ddPct(pD),sumD+' / '+sumTd+' (yang lapor)'],
-    ['Capaian Weekly',ddPct(pW),sumW+' / '+sumTw+' minggu ini'],
-    ['Capaian Monthly',ddPct(pM),sumM+' / '+sumTm+' bulan ini'],
-    ['Belum Selesai',belum,'kegiatan hari ini'],
-    ['Total jam kerja',Math.round(jam*10)/10,lapor?('rata-rata '+(Math.round(jam/lapor*10)/10)+' jam / personil'):'']
-  ]);
-  const head=g=>g.filter(o=>!o.noReport).length+'/'+g.length+' lapor';
-  return {info:'Data tanggal '+dd+'/'+mm+'/'+yy+' dari aplikasi. Target dari sheet Master. Data Cuti belum termasuk, jadi personil cuti tampil "Belum Lapor". Ketuk nama untuk melihat kegiatannya.', html:cards+ddSections(rows,head)};
+  const d=ddParse(ymd);
+  const hero=ddHero({pct:pD,ringLabel:'Daily',title:DD_HARI[d.getDay()]+', '+d.getDate()+' '+DD_BULAN[d.getMonth()+1]+' '+d.getFullYear(),
+    sub:'<b>'+lapor+'</b> dari '+DA_MASTER.p.length+' personil sudah lapor',seg:[lapor,DA_MASTER.p.length],
+    strip:[['Weekly',ddPct(pW)],['Monthly',ddPct(pM)],['Belum selesai',belum],['Jam kerja',ddR1(jam)]]});
+  const head=g=>g.filter(o=>!o.noReport).length+' dari '+g.length+' sudah lapor';
+  return {info:'Dihitung dari data aplikasi. Capaian Daily = kegiatan Daily yang selesai dibanding target Daily personil yang sudah lapor. Weekly dan Monthly dibanding target seluruh personil minggu dan bulan ini. Persentase di tiap personil menggabungkan ketiganya. Data cuti belum termasuk, jadi personil cuti tampil Belum lapor. Ketuk nama untuk melihat kegiatannya.', html:hero+ddSections(rows,head)};
 }
 function ddBulanan(ym){
   const today=daToday(), ms=ym+'-01';
@@ -3584,7 +3629,7 @@ function ddBulanan(ym){
       if(f==='Monthly') o.mo++;
     }
   });
-  let tn=0,ts=0,tj=0,sumT=0,cntT=0;
+  let tn=0,ts=0,tj=0,sumT=0,cntT=0,aktif=0;
   const rows=DA_MASTER.p.map(p=>{
     const o=by[p[0]], tg=ddTgt(p[0]), td=tg[0], tw=tg[1], tm=tg[2];
     const hari=Object.keys(o.days).length;
@@ -3593,22 +3638,20 @@ function ddBulanan(ym){
     const md=Math.min(o.mo,tm);
     const den=hari*td+W*tw+tm;
     const t=den===0?null:(dd+wd+md)/den;
-    tn+=o.n; ts+=o.sel; tj+=o.jam; if(t!==null){ sumT+=t; cntT++; }
-    const meta=`<span>Hari lapor <b>${hari}</b></span><span>Daily <b>${dd}/${hari*td}</b></span><span>Weekly <b>${wd}/${W*tw}</b></span><span>Monthly <b>${md}/${tm}</b></span><span>Kegiatan <b>${o.n}</b></span><span>Jam <b>${Math.round(o.jam*10)/10}</b></span>`;
+    tn+=o.n; ts+=o.sel; tj+=o.jam; if(t!==null){ sumT+=t; cntT++; } if(o.n>0) aktif++;
+    const meta=`<span>Hari lapor <b>${hari}</b></span><span>Daily <b>${dd}/${hari*td}</b></span><span>Weekly <b>${wd}/${W*tw}</b></span><span>Monthly <b>${md}/${tm}</b></span><span>Kegiatan <b>${o.n}</b></span><span>Jam <b>${ddR1(o.jam)}</b></span>`;
     return {p:p,t:t,noReport:o.n===0,meta:meta,det:''};
   });
-  const names=['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  const cards=ddCards([
-    ['Rata-rata capaian',cntT?ddPct(sumT/cntT):'-','semua personil'],
-    ['Total kegiatan',tn,ts+' selesai ('+(tn?Math.round(ts/tn*100):0)+'%)'],
-    ['Total jam kerja',Math.round(tj*10)/10,''],
-    ['Minggu dihitung',W,'sampai '+(end>=ms?end.split('-')[2]+'/'+end.split('-')[1]:'-')]
-  ]);
-  const head=g=>{ const a=g.filter(o=>o.t!==null); return a.length?'rata-rata '+ddPct(a.reduce((x,o)=>x+o.t,0)/a.length):''; };
-  return {info:names[M]+' '+Y+'. % capaian = (Daily selesai tiap hari lapor + Weekly selesai tiap minggu + Monthly selesai) dibanding targetnya di sheet Master; Daily & Weekly dibatasi sebesar target per hari/minggu. Data tersedia sejak 3 bulan terakhir. Cuti belum termasuk.', html:cards+ddSections(rows,head)};
+  const avg=cntT?sumT/cntT:null;
+  const hero=ddHero({pct:avg,ringLabel:'rata-rata',title:DD_BULAN[M]+' '+Y,
+    sub:'<b>'+aktif+'</b> dari '+DA_MASTER.p.length+' personil punya kegiatan bulan ini',seg:[aktif,DA_MASTER.p.length],
+    strip:[['Kegiatan',tn],['Selesai',(tn?Math.round(ts/tn*100):0)+'%'],['Jam kerja',ddR1(tj)],['Minggu',W]]});
+  const head=g=>{ const a=g.filter(o=>o.t!==null&&!o.noReport); return a.length?'rata-rata '+ddPct(a.reduce((x,o)=>x+o.t,0)/a.length):''; };
+  return {info:'Persentase capaian = (Daily selesai tiap hari lapor + Weekly selesai tiap minggu + Monthly selesai) dibanding targetnya di sheet Master. Daily dan Weekly dibatasi sebesar target per hari dan per minggu. Data tersedia 3 bulan terakhir. Data cuti belum termasuk.', html:hero+ddSections(rows,head)};
 }
 function daDashRender(){
   const body=$('ddBody'); if(!body) return;
+  if(!isKimperUser()){ body.innerHTML='<div class="empty-state">Dashboard statistik khusus Departemen HSE.</div>'; $('ddHeroWrap').innerHTML=''; $('ddInfoTxt').textContent=''; return; }
   if(!$('ddTanggal').value) $('ddTanggal').value=daToday();
   if(!$('ddBulan').value) $('ddBulan').value=daToday().slice(0,7);
   $('ddBulan').min=DA_WIN_START.slice(0,7); $('ddBulan').max=daToday().slice(0,7);
@@ -3618,14 +3661,17 @@ function daDashRender(){
     let res;
     if(ddMode==='harian'){
       const d=$('ddTanggal').value;
-      if(d<DA_WIN_START){ body.innerHTML='<div class="empty-state">Tanggal di luar data yang dimuat (sejak '+DA_WIN_START+').</div>'; $('ddInfo').textContent=''; return; }
+      if(d<DA_WIN_START){ body.innerHTML='<div class="empty-state">Tanggal ini di luar data yang dimuat (sejak '+DA_WIN_START+').</div>'; $('ddInfoTxt').textContent=''; return; }
       res=ddHarian(d);
     } else {
       const m=$('ddBulan').value;
-      if(m+'-01'<DA_WIN_START.slice(0,7)+'-01'){ body.innerHTML='<div class="empty-state">Bulan di luar data yang dimuat.</div>'; $('ddInfo').textContent=''; return; }
+      if(m+'-01'<DA_WIN_START.slice(0,7)+'-01'){ body.innerHTML='<div class="empty-state">Bulan ini di luar data yang dimuat.</div>'; $('ddInfoTxt').textContent=''; return; }
       res=ddBulanan(m);
     }
-    $('ddInfo').textContent=res.info; body.innerHTML=res.html;
+    $('ddInfoTxt').textContent=res.info;
+    // hero dan daftar dirender bersama; ring digambar animasi sekali setelah tampil
+    $('ddHeroWrap').innerHTML=''; body.innerHTML=res.html;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ body.querySelectorAll('.dd-ring .fg').forEach(c=>{ c.style.strokeDashoffset=c.dataset.off; }); }));
   }catch(e){ console.error(e); body.innerHTML='<div class="empty-state">Dashboard gagal dihitung.</div>'; }
 }
 $('ddSwHarian').addEventListener('click',()=>{ ddMode='harian'; daDashRender(); });
