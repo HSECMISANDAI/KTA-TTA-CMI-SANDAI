@@ -3521,6 +3521,7 @@ const DD_SECTIONS = ['HSE Dept','Safety','Health','Environment','Training Center
 const DD_HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const DD_BULAN = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 let ddMode = 'harian';
+const DD_JAM_STD = 8.5;   // jam kerja wajar per hari; status Baik >= 90%, Cukup >= 60%, Kurang di bawahnya
 function ddPad(n){ return String(n).padStart(2,'0'); }
 function ddYMD(d){ return d.getFullYear()+'-'+ddPad(d.getMonth()+1)+'-'+ddPad(d.getDate()); }
 function ddParse(s){ const a=s.split('-').map(Number); return new Date(a[0],a[1]-1,a[2]); }
@@ -3535,7 +3536,7 @@ function ddInit(n){ const w=String(n).replace(/\(.*?\)/g,'').trim().split(/\s+/)
 function ddStat(t){
   if(t===null) return {k:'Belum ada target',bg:'#EEF0F3',fg:'#68707C',c:'#9AA3AF',ring:'#9AA3AF'};
   if(t>=0.9) return {k:'Baik',bg:'#DDF0E3',fg:'#178A4C',c:'#178A4C',ring:'#4BDB93'};
-  if(t>=0.6) return {k:'Perlu perhatian',bg:'#FBF0D0',fg:'#8A6204',c:'#C58A05',ring:'#F6C04A'};
+  if(t>=0.6) return {k:'Cukup',bg:'#FBF0D0',fg:'#8A6204',c:'#C58A05',ring:'#F6C04A'};
   return {k:'Kurang',bg:'#FBE1E1',fg:'#C0272B',c:'#C0272B',ring:'#FF8A7A'};
 }
 // Ring capaian + tiga/empat angka ringkas di bawahnya
@@ -3580,7 +3581,7 @@ function ddHarian(ymd){
       if(f==='Monthly' && r.tanggal>=ms) o.mo++;
     }
   });
-  let lapor=0,sumD=0,sumTd=0,sumW=0,sumTw=0,sumM=0,sumTm=0,belum=0,jam=0;
+  let lapor=0,sumD=0,sumTd=0,sumW=0,sumTw=0,sumM=0,sumTm=0,belum=0,jam=0,sumJc=0;
   const rows=DA_MASTER.p.map(p=>{
     const o=by[p[0]], tg=ddTgt(p[0]), td=tg[0], tw=tg[1], tm=tg[2];
     const rep=o.recs.length>0;
@@ -3589,9 +3590,8 @@ function ddHarian(ymd){
     const j=o.recs.reduce((a,r)=>a+ddNum(daDurasi(r.mulai,r.selesai)),0);
     const wd=Math.min(o.wk,tw), md=Math.min(o.mo,tm);
     sumTw+=tw; sumW+=wd; sumTm+=tm; sumM+=md;
-    if(rep){ lapor++; sumD+=dsel; sumTd+=td; belum+=bl; jam+=j; }
-    const den=(rep?td:0)+tw+tm;
-    const t=den===0?null:((rep?Math.min(dsel,td):0)+wd+md)/den;
+    if(rep){ lapor++; sumD+=dsel; sumTd+=td; belum+=bl; jam+=j; sumJc+=Math.min(j,DD_JAM_STD); }
+    const t=rep?Math.min(1,j/DD_JAM_STD):null;   // status berdasar jam kerja dibanding 8,5 jam
     const det=o.recs.slice().sort((a,b)=>(a.mulai||'').localeCompare(b.mulai||'')).map(r=>
       `<div class="it"><span class="tm">${kpEsc(r.mulai||'?')}–${kpEsc(r.selesai||'?')}</span> ${kpEsc(r.kegiatan||'')}${r.status==='Selesai'?'':' <span style="color:#B45309;font-weight:700;">Belum selesai</span>'}${r.ket?'<div class="kt">'+kpEsc(r.ket)+'</div>':''}</div>`).join('');
     const meta = rep
@@ -3601,11 +3601,12 @@ function ddHarian(ymd){
   });
   const pD=sumTd?Math.min(1,sumD/sumTd):null, pW=sumTw?Math.min(1,sumW/sumTw):null, pM=sumTm?Math.min(1,sumM/sumTm):null;
   const d=ddParse(ymd);
-  const hero=ddHero({pct:pD,ringLabel:'Daily',title:DD_HARI[d.getDay()]+', '+d.getDate()+' '+DD_BULAN[d.getMonth()+1]+' '+d.getFullYear(),
-    sub:'<b>'+lapor+'</b> dari '+DA_MASTER.p.length+' personil sudah lapor',seg:[lapor,DA_MASTER.p.length],
-    strip:[['Weekly',ddPct(pW)],['Monthly',ddPct(pM)],['Belum selesai',belum],['Jam kerja',ddR1(jam)]]});
+  const pJ=lapor?sumJc/(lapor*DD_JAM_STD):null;
+  const hero=ddHero({pct:pJ,ringLabel:'Jam kerja',title:DD_HARI[d.getDay()]+', '+d.getDate()+' '+DD_BULAN[d.getMonth()+1]+' '+d.getFullYear(),
+    sub:'<b>'+lapor+'</b> dari '+DA_MASTER.p.length+' personil sudah lapor'+(lapor?'<br>Rata-rata '+ddR1(jam/lapor)+' jam per personil':''),seg:[lapor,DA_MASTER.p.length],
+    strip:[['Daily',ddPct(pD)],['Weekly',ddPct(pW)],['Monthly',ddPct(pM)],['Belum selesai',belum]]});
   const head=g=>g.filter(o=>!o.noReport).length+' dari '+g.length+' sudah lapor';
-  return {info:'Dihitung dari data aplikasi. Capaian Daily = kegiatan Daily yang selesai dibanding target Daily personil yang sudah lapor. Weekly dan Monthly dibanding target seluruh personil minggu dan bulan ini. Persentase di tiap personil menggabungkan ketiganya. Data cuti belum termasuk, jadi personil cuti tampil Belum lapor. Ketuk nama untuk melihat kegiatannya.', html:hero+ddSections(rows,head)};
+  return {info:'Status tiap personil berdasarkan jam kerja yang diinput hari itu dibanding 8,5 jam kerja wajar per hari: Baik jika 90% atau lebih (sekitar 7,7 jam ke atas), Cukup jika 60 sampai 89% (sekitar 5,1 sampai 7,6 jam), Kurang jika di bawah 60%. Lingkaran di atas adalah rata-rata kecukupan jam kerja personil yang sudah lapor. Daily, Weekly, dan Monthly di bawahnya adalah capaian kegiatan terhadap target di sheet Master. Data cuti belum termasuk, jadi personil cuti tampil Belum lapor. Ketuk nama untuk melihat kegiatannya.', html:hero+ddSections(rows,head)};
 }
 function ddBulanan(ym){
   const today=daToday(), ms=ym+'-01';
@@ -3615,12 +3616,13 @@ function ddBulanan(ym){
   const weeks=new Set();
   if(ms<=end){ for(let d=ddParse(ms); ddYMD(d)<=end; d.setDate(d.getDate()+1)) weeks.add(ddWeekStart(ddYMD(d))); }
   const W=weeks.size;
-  const by={}; DA_MASTER.p.forEach(p=>{ by[p[0]]={p:p,days:{},wk:{},mo:0,n:0,sel:0,jam:0}; });
+  const by={}; DA_MASTER.p.forEach(p=>{ by[p[0]]={p:p,days:{},dj:{},wk:{},mo:0,n:0,sel:0,jam:0}; });
   dailyData.forEach(r=>{
     if(!r.tanggal||r.tanggal<ms||r.tanggal>end) return;
     const o=by[ddPerson(r)]; if(!o) return;
     o.n++; if(r.status==='Selesai') o.sel++;
-    o.jam+=ddNum(daDurasi(r.mulai,r.selesai));
+    const dj=ddNum(daDurasi(r.mulai,r.selesai));
+    o.jam+=dj; o.dj[r.tanggal]=(o.dj[r.tanggal]||0)+dj;
     const f=ddFrek(r);
     if(!o.days[r.tanggal]) o.days[r.tanggal]=0;
     if(r.status==='Selesai'){
@@ -3629,25 +3631,24 @@ function ddBulanan(ym){
       if(f==='Monthly') o.mo++;
     }
   });
-  let tn=0,ts=0,tj=0,sumT=0,cntT=0,aktif=0;
+  let tn=0,ts=0,tj=0,sumT=0,cntT=0,aktif=0,tHari=0;
   const rows=DA_MASTER.p.map(p=>{
     const o=by[p[0]], tg=ddTgt(p[0]), td=tg[0], tw=tg[1], tm=tg[2];
     const hari=Object.keys(o.days).length;
     const dd=Object.keys(o.days).reduce((a,k)=>a+Math.min(o.days[k],td),0);
     const wd=Object.keys(o.wk).reduce((a,k)=>a+Math.min(o.wk[k],tw),0);
     const md=Math.min(o.mo,tm);
-    const den=hari*td+W*tw+tm;
-    const t=den===0?null:(dd+wd+md)/den;
-    tn+=o.n; ts+=o.sel; tj+=o.jam; if(t!==null){ sumT+=t; cntT++; } if(o.n>0) aktif++;
+    const t=hari===0?null:Object.keys(o.dj).reduce((a,k)=>a+Math.min(o.dj[k],DD_JAM_STD),0)/(hari*DD_JAM_STD);   // kecukupan jam kerja per hari lapor
+    tHari+=hari; tn+=o.n; ts+=o.sel; tj+=o.jam; if(t!==null){ sumT+=t; cntT++; } if(o.n>0) aktif++;
     const meta=`<span>Hari lapor <b>${hari}</b></span><span>Daily <b>${dd}/${hari*td}</b></span><span>Weekly <b>${wd}/${W*tw}</b></span><span>Monthly <b>${md}/${tm}</b></span><span>Kegiatan <b>${o.n}</b></span><span>Jam <b>${ddR1(o.jam)}</b></span>`;
     return {p:p,t:t,noReport:o.n===0,meta:meta,det:''};
   });
   const avg=cntT?sumT/cntT:null;
-  const hero=ddHero({pct:avg,ringLabel:'rata-rata',title:DD_BULAN[M]+' '+Y,
+  const hero=ddHero({pct:avg,ringLabel:'jam kerja',title:DD_BULAN[M]+' '+Y,
     sub:'<b>'+aktif+'</b> dari '+DA_MASTER.p.length+' personil punya kegiatan bulan ini',seg:[aktif,DA_MASTER.p.length],
-    strip:[['Kegiatan',tn],['Selesai',(tn?Math.round(ts/tn*100):0)+'%'],['Jam kerja',ddR1(tj)],['Minggu',W]]});
+    strip:[['Kegiatan',tn],['Selesai',(tn?Math.round(ts/tn*100):0)+'%'],['Jam kerja',ddR1(tj)],['Jam per hari',tHari?ddR1(tj/tHari):'-']]});
   const head=g=>{ const a=g.filter(o=>o.t!==null&&!o.noReport); return a.length?'rata-rata '+ddPct(a.reduce((x,o)=>x+o.t,0)/a.length):''; };
-  return {info:'Persentase capaian = (Daily selesai tiap hari lapor + Weekly selesai tiap minggu + Monthly selesai) dibanding targetnya di sheet Master. Daily dan Weekly dibatasi sebesar target per hari dan per minggu. Data tersedia 3 bulan terakhir. Data cuti belum termasuk.', html:hero+ddSections(rows,head)};
+  return {info:'Status tiap personil berdasarkan jam kerja per hari lapor dibanding 8,5 jam kerja wajar (jam di atas 8,5 pada satu hari tidak menutupi hari yang kurang): Baik jika 90% atau lebih, Cukup jika 60 sampai 89%, Kurang jika di bawah 60%. Hari tanpa input tidak dihitung. Data tersedia 3 bulan terakhir. Data cuti belum termasuk.', html:hero+ddSections(rows,head)};
 }
 function daDashRender(){
   const body=$('ddBody'); if(!body) return;
