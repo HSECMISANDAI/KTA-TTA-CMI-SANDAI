@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cita-mobile-v14';
+const CACHE_NAME = 'cita-mobile-v15';
 
 // File inti aplikasi (app shell) — wajib ada supaya halaman bisa dibuka tanpa internet
 const APP_SHELL = [
