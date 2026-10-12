@@ -3362,13 +3362,34 @@ $('daExportBtn').addEventListener('click', async ()=>{
   }catch(e){ console.error(e); showToast('Gagal membuat file Excel.'); }
 });
 $('daTestBtn').addEventListener('click', daTestKoneksi);
+async function daSyncBulk(items){
+  const body = JSON.stringify({ secret:DAILY_SYNC_SECRET, action:'bulk', items:items.map(r=>({id:r.id,row:daRowFor(r)})) });
+  const res = await fetch(DAILY_SYNC_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body });
+  return await res.json();
+}
+let daResyncBusy = false;
 $('daResyncBtn').addEventListener('click', async ()=>{
   if(!isAdminUser()) return;
+  if(daResyncBusy){ showToast('Pengiriman ulang masih berjalan, tunggu sampai selesai.'); return; }
   const arr=[...dailyData].sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||'')||(a.mulai||'').localeCompare(b.mulai||''));
-  if(!confirm('Kirim ulang '+arr.length+' data ke Google Sheet? Baris yang sudah ada diperbarui, bukan digandakan.')) return;
-  showToast('Mengirim ulang...');
-  for(const r of arr){ await daSync('upsert', r); await new Promise(ok=>setTimeout(ok,1200)); }
-  showToast('Selesai dikirim ulang.');
+  if(!confirm('Kirim ulang '+arr.length+' data ke Google Sheet? Baris yang sudah ada diperbarui, bukan digandakan. Jangan tutup halaman sampai selesai.')) return;
+  daResyncBusy = true; $('daResyncBtn').disabled = true;
+  const CH = 10; let sent = 0, fail = 0;
+  try{
+    for(let i=0;i<arr.length;i+=CH){
+      const part = arr.slice(i,i+CH);
+      daSetStatus('mengirim ulang… '+Math.min(i+CH,arr.length)+' / '+arr.length);
+      let ok = false, msg = '';
+      for(let t=0;t<2 && !ok;t++){            // satu kali ulang bila kena kunci / jaringan
+        try{ const j = await daSyncBulk(part); ok = !!(j && j.ok); msg = (j && j.error) || ''; if(j && j.done) sent += (t===0 ? j.done : 0); }
+        catch(e){ msg = (e && e.message) || String(e); }
+        if(!ok) await new Promise(r=>setTimeout(r,4000));
+      }
+      if(!ok){ fail += part.length; daSetStatus('✗ gagal pada data '+(i+1)+'–'+Math.min(i+CH,arr.length)+': '+msg); }
+    }
+    daSetStatus(fail ? ('selesai dengan '+fail+' data gagal — tekan tombol lagi untuk mengulang yang gagal.') : ('✓ selesai: '+arr.length+' data dikirim ulang.'));
+    showToast(fail ? 'Sebagian gagal, lihat status.' : 'Selesai dikirim ulang.');
+  } finally { daResyncBusy = false; $('daResyncBtn').disabled = false; }
 });
 
 function daAttachListener(){
